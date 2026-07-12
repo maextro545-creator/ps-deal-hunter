@@ -1,5 +1,5 @@
 node_modules/
-.env
+.env*
 .vercel/
 server/deals-cache.json
 *.log
