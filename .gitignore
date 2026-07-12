@@ -4,3 +4,5 @@ node_modules/
 server/deals-cache.json
 *.log
 scratch/
+
+.vercel

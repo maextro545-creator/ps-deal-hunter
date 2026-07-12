@@ -87,7 +87,7 @@ app.use('/api', async (req, res, next) => {
  * Protected by Vercel's Cron Secret in production.
  */
 app.get('/api/cron-scrape', async (req, res) => {
-  const cronSecret = process.env.CRON_SECRET;
+  const cronSecret = process.env.CRON_SECRET ? process.env.CRON_SECRET.trim() : null;
   const authHeader = req.headers.authorization;
 
   // Accept token from header or query param
