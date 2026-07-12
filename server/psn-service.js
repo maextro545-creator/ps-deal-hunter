@@ -337,7 +337,7 @@ function findBestProduct(products, searchTerm) {
 
 // ─── Store Page Scraping ─────────────────────────────────────────────────────────
 
-const USER_AGENT = 'Mozilla/5.0 (compatible; Googlebot/2.1; +http://www.google.com/bot.html)';
+const USER_AGENT = 'Discordbot/2.0; +https://discordapp.com';
 const SCRAPE_TIMEOUT_MS = 15000;
 
 /**
