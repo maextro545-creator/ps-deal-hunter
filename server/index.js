@@ -90,9 +90,12 @@ app.get('/api/cron-scrape', async (req, res) => {
   const cronSecret = process.env.CRON_SECRET;
   const authHeader = req.headers.authorization;
 
+  // Accept token from header or query param
+  const token = req.query.secret || (authHeader && authHeader.startsWith('Bearer ') ? authHeader.substring(7) : null);
+
   // Verify Cron Secret in production
   if (process.env.NODE_ENV === 'production' && cronSecret) {
-    if (!authHeader || authHeader !== `Bearer ${cronSecret}`) {
+    if (!token || token !== cronSecret) {
       console.warn('⚠️ Unauthorized cron scrape attempt');
       return res.status(401).json({ error: 'Unauthorized' });
     }
