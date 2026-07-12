@@ -2,8 +2,8 @@
  * PS Store Deal Hunter - Cache Service
  *
  * Abstracted caching layer.
- * In production (Vercel): Uses Vercel KV (Redis) to persist data across serverless invocations.
- * In development (Local): Uses local JSON file cache (server/deals-cache.json) for fast local iteration.
+ * In production (Vercel): Uses ioredis to connect to Vercel KV (Redis) using the TCP connection URL.
+ * In development (Local): Uses local JSON file cache (server/deals-cache.json).
  */
 
 'use strict';
@@ -13,20 +13,21 @@ const path = require('path');
 
 const LOCAL_CACHE_PATH = path.join(__dirname, 'deals-cache.json');
 
-// Check if Vercel KV is configured (Vercel automatically injects KV_REST_API_URL when connected)
-const useKV = !!(process.env.KV_REST_API_URL);
+// Check if Vercel KV is configured (we look for KV_REDIS_URL or KV_URL)
+const redisUrl = process.env.KV_REDIS_URL || process.env.KV_URL;
 
 let kv = null;
-if (useKV) {
+if (redisUrl) {
   try {
-    const { createClient } = require('@vercel/kv');
-    kv = createClient({
-      url: process.env.KV_REST_API_URL,
-      token: process.env.KV_REST_API_TOKEN,
+    const Redis = require('ioredis');
+    // Connect to Upstash Redis via TCP
+    kv = new Redis(redisUrl, {
+      maxRetriesPerRequest: 1,
+      connectTimeout: 5000,
     });
-    console.log('✅ Cache Service: Using Vercel KV (Redis) store');
+    console.log('✅ Cache Service: Using Vercel KV (ioredis) store');
   } catch (err) {
-    console.error('❌ Cache Service: Failed to initialize Vercel KV:', err.message);
+    console.error('❌ Cache Service: Failed to initialize ioredis:', err.message);
   }
 }
 
@@ -42,10 +43,10 @@ if (!kv) {
 async function get(key) {
   if (kv) {
     try {
-      return await kv.get(key);
+      const val = await kv.get(key);
+      return val ? JSON.parse(val) : null;
     } catch (err) {
       console.error(`❌ Cache Service: Error reading key "${key}" from KV:`, err.message);
-      // Fallback to reading local file if KV fails
     }
   }
 
@@ -69,11 +70,10 @@ async function get(key) {
 async function set(key, value) {
   if (kv) {
     try {
-      await kv.set(key, value);
+      await kv.set(key, JSON.stringify(value));
       return true;
     } catch (err) {
       console.error(`❌ Cache Service: Error writing key "${key}" to KV:`, err.message);
-      // Fallback to local file
     }
   }
 
