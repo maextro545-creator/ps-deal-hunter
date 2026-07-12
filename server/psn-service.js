@@ -337,7 +337,7 @@ function findBestProduct(products, searchTerm) {
 
 // ─── Store Page Scraping ─────────────────────────────────────────────────────────
 
-const USER_AGENT = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36';
+const USER_AGENT = 'Mozilla/5.0 (compatible; Googlebot/2.1; +http://www.google.com/bot.html)';
 const SCRAPE_TIMEOUT_MS = 15000;
 
 /**
@@ -551,7 +551,7 @@ async function buildDeal(gameInfo, exchangeRates) {
  * @returns {Promise<Array>}      Array of deal objects.
  */
 async function fetchLiveDeals(exchangeRates, previousDeals = []) {
-  const BATCH_SIZE = 4; // max concurrent game fetches
+  const BATCH_SIZE = 1; // max concurrent game fetches (11 regional requests)
   const results = [];
 
   for (let i = 0; i < GAME_CATALOG.length; i += BATCH_SIZE) {
@@ -580,7 +580,7 @@ async function fetchLiveDeals(exchangeRates, previousDeals = []) {
 
     // Small delay between batches to be polite to PS servers
     if (i + BATCH_SIZE < GAME_CATALOG.length) {
-      await new Promise(r => setTimeout(r, 500));
+      await new Promise(r => setTimeout(r, 800));
     }
   }
 
