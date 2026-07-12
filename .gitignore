@@ -1,0 +1,6 @@
+node_modules/
+.env
+.vercel/
+server/deals-cache.json
+*.log
+scratch/

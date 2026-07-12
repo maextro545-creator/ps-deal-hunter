@@ -1,0 +1,17 @@
+{
+  "name": "ps-deal-hunter",
+  "version": "1.0.0",
+  "description": "PS Store Deal Hunter - Compare PlayStation game prices across regions",
+  "main": "server/index.js",
+  "scripts": {
+    "start": "node server/index.js",
+    "dev": "node --watch server/index.js"
+  },
+  "dependencies": {
+    "@vercel/kv": "^3.0.0",
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.5",
+    "express": "^4.21.0",
+    "psn-api": "^2.18.0"
+  }
+}
