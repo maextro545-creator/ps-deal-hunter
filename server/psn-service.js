@@ -606,12 +606,20 @@ async function getDeals(exchangeRates, previousDeals = []) {
       console.log('🌐 Live mode: scraping PlayStation Store...');
       const deals = await fetchLiveDeals(exchangeRates, previousDeals);
       if (deals.length === 0) {
-        console.warn('⚠️  Live scrape returned 0 games; falling back to demo data');
+        if (previousDeals && previousDeals.length > 0) {
+          console.warn('⚠️  Live scrape failed to fetch any games. Keeping previous deals in cache.');
+          return previousDeals;
+        }
+        console.warn('⚠️  Live scrape returned 0 games and cache is empty; falling back to demo data');
         return generateDemoDeals(exchangeRates);
       }
       return deals;
     } catch (err) {
-      console.error('❌ Live scrape failed:', err.message, '– falling back to demo data');
+      console.error('❌ Live scrape failed:', err.message);
+      if (previousDeals && previousDeals.length > 0) {
+        console.warn('⚠️  Keeping previous deals in cache.');
+        return previousDeals;
+      }
       return generateDemoDeals(exchangeRates);
     }
   }
