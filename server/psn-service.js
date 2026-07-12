@@ -550,7 +550,7 @@ async function buildDeal(gameInfo, exchangeRates) {
  * @param {Object} exchangeRates  Exchange rates (per 1 USD).
  * @returns {Promise<Array>}      Array of deal objects.
  */
-async function fetchLiveDeals(exchangeRates) {
+async function fetchLiveDeals(exchangeRates, previousDeals = []) {
   const BATCH_SIZE = 4; // max concurrent game fetches
   const results = [];
 
@@ -562,13 +562,21 @@ async function fetchLiveDeals(exchangeRates) {
       batch.map(game => buildDeal(game, exchangeRates))
     );
 
-    for (const settled of batchResults) {
+    batchResults.forEach((settled, idx) => {
+      const game = batch[idx];
       if (settled.status === 'fulfilled' && settled.value) {
         results.push(settled.value);
       } else {
-        console.warn('  ⚠️  A game failed to scrape, it will be skipped.');
+        console.warn(`  ⚠️ Game "${game.name}" failed to scrape.`);
+        const prev = previousDeals.find(d => d.id === game.id);
+        if (prev) {
+          console.log(`  🔄 Using previously cached prices for "${game.name}"`);
+          results.push(prev);
+        } else {
+          console.log(`  ❌ No cached data for "${game.name}" - skipping`);
+        }
       }
-    }
+    });
 
     // Small delay between batches to be polite to PS servers
     if (i + BATCH_SIZE < GAME_CATALOG.length) {
@@ -576,7 +584,7 @@ async function fetchLiveDeals(exchangeRates) {
     }
   }
 
-  console.log(`  ✅ Scraped ${results.length}/${GAME_CATALOG.length} games successfully`);
+  console.log(`  ✅ Scraped/recovered ${results.length}/${GAME_CATALOG.length} games`);
   return results;
 }
 
@@ -590,13 +598,13 @@ async function fetchLiveDeals(exchangeRates) {
  * @param {Object} exchangeRates  Exchange rates keyed by currency code (per 1 USD).
  * @returns {Promise<Array>}      Array of deal objects with full regional pricing.
  */
-async function getDeals(exchangeRates) {
+async function getDeals(exchangeRates, previousDeals = []) {
   const mode = (process.env.MODE || 'demo').trim();
 
   if (mode === 'live') {
     try {
       console.log('🌐 Live mode: scraping PlayStation Store...');
-      const deals = await fetchLiveDeals(exchangeRates);
+      const deals = await fetchLiveDeals(exchangeRates, previousDeals);
       if (deals.length === 0) {
         console.warn('⚠️  Live scrape returned 0 games; falling back to demo data');
         return generateDemoDeals(exchangeRates);

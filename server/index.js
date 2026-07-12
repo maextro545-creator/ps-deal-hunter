@@ -286,7 +286,7 @@ async function refreshData() {
   try {
     console.log('🔄 Refreshing deal data...');
     const rates = await fetchRates();
-    const deals = await getDeals(rates);
+    const deals = await getDeals(rates, cachedDeals);
 
     cachedDeals = deals;
     lastUpdated = new Date();
