@@ -426,6 +426,70 @@ function openComparison(gameId) {
 
   state.selectedGame = deal;
 
+  // Render immediately with current cached (possibly incomplete) data
+  renderModalContent(deal);
+
+  // Show modal
+  DOM.modal().hidden = false;
+  document.body.style.overflow = 'hidden';
+
+  // Add status indicator to show we are searching the store
+  const modalHeader = DOM.modalHeader();
+  if (modalHeader) {
+    const existing = $('.modal-live-status');
+    if (existing) existing.remove();
+
+    const statusEl = document.createElement('div');
+    statusEl.className = 'modal-live-status';
+    statusEl.innerHTML = `🔄 Buscando precios de todas las regiones en vivo...`;
+    statusEl.style = 'font-size: 0.8rem; color: var(--accent-cyan); background: rgba(0,0,0,0.4); padding: 4px 12px; border-radius: 4px; display: inline-block; margin-top: 8px;';
+    modalHeader.querySelector('.modal-game-meta').appendChild(statusEl);
+  }
+
+  // Run targeted search query in background to resolve page layout mismatches
+  const cleanName = deal.name.replace(/™|®|©/g, '');
+  fetch(`/api/search?q=${encodeURIComponent(cleanName)}`)
+    .then(r => r.json())
+    .then(res => {
+      const results = res.results || [];
+      const getSkuId = (id) => id ? id.split('_00-')[1] || id : '';
+      const targetSku = getSkuId(deal.id);
+
+      // Find precise match
+      const matchedSearchDeal = results.find(r => getSkuId(r.id) === targetSku) || 
+                                results.find(r => r.name.toLowerCase().replace(/[^a-z0-9]/g, '') === deal.name.toLowerCase().replace(/[^a-z0-9]/g, ''));
+
+      if (matchedSearchDeal && matchedSearchDeal.prices) {
+        deal.prices = matchedSearchDeal.prices;
+        deal.bestPrice = matchedSearchDeal.bestPrice;
+        deal.worstPrice = matchedSearchDeal.worstPrice;
+        deal.savingsVsHome = matchedSearchDeal.savingsVsHome;
+
+        // If this is still the active modal, update content!
+        if (state.selectedGame && state.selectedGame.id === deal.id) {
+          renderModalContent(deal);
+          const statusEl = $('.modal-live-status');
+          if (statusEl) {
+            statusEl.innerHTML = `✅ Precios actualizados en vivo`;
+            statusEl.style.color = 'var(--accent-green)';
+            setTimeout(() => statusEl.remove(), 2500);
+          }
+        }
+        // Refresh grid deals so cards update with actual prices
+        renderDeals();
+      } else {
+        const statusEl = $('.modal-live-status');
+        if (statusEl) statusEl.remove();
+      }
+    })
+    .catch(err => {
+      console.warn('Background price update failed:', err);
+      const statusEl = $('.modal-live-status');
+      if (statusEl) statusEl.remove();
+    });
+}
+
+function renderModalContent(deal) {
   // Set modal header
   DOM.modalGameName().textContent = deal.name;
   DOM.modalPlatform().textContent = deal.platform || 'PS5';
@@ -494,10 +558,6 @@ function openComparison(gameId) {
 
   // Savings summary
   renderSavingsSummary(deal, prices);
-
-  // Show modal
-  DOM.modal().hidden = false;
-  document.body.style.overflow = 'hidden';
 }
 
 function closeComparison() {
