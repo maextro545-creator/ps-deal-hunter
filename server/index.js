@@ -10,7 +10,7 @@ const path = require('path');
 
 const { REGIONS } = require('./regions');
 const { fetchRates, getRates } = require('./exchange-service');
-const { getDeals, searchGames, searchAndScrapeGame, searchAndScrapeGamesList } = require('./psn-service');
+const { getDeals, searchGames, searchAndScrapeGame, searchAndScrapeGamesList, scrapeCategoryDealsList } = require('./psn-service');
 const { generateDemoDeals } = require('./demo-data');
 const cache = require('./cache-service');
 
@@ -219,6 +219,67 @@ app.get('/api/deals', (req, res) => {
   } catch (error) {
     console.error('❌ Error serving deals:', error);
     res.status(500).json({ error: 'Failed to fetch deals', message: error.message });
+  }
+});
+
+/**
+ * GET /api/deals/category
+ * Returns live scraped deals for a specific category ID and page from PS Store,
+ * grouped across all regions.
+ */
+app.get('/api/deals/category', async (req, res) => {
+  try {
+    const categoryId = req.query.id || 'd1fa27b1-da1f-4c4b-8e7a-997e59b787f7';
+    const page = parseInt(req.query.page) || 1;
+
+    // Use a cache key for category + page
+    const cacheKey = `category-deals:${categoryId}:${page}`;
+    let deals = [];
+    let cached = false;
+
+    // Bypass cache if refresh=true
+    const bypassCache = req.query.refresh === 'true';
+
+    if (!bypassCache) {
+      try {
+        const cachedData = await cache.get(cacheKey);
+        if (cachedData && Array.isArray(cachedData)) {
+          console.log(`✅ Loaded category deals from cache for: "${categoryId}" page ${page}`);
+          deals = cachedData;
+          cached = true;
+        }
+      } catch (err) {
+        console.warn(`⚠️ Error reading category cache: ${err.message}`);
+      }
+    }
+
+    if (!cached || deals.length === 0) {
+      const rates = getRates();
+      deals = await scrapeCategoryDealsList(categoryId, page, rates);
+
+      if (deals && deals.length > 0) {
+        // Cache for 6 hours (21600 seconds)
+        try {
+          await cache.set(cacheKey, deals, 21600);
+          console.log(`💾 Saved category deals to Redis cache for: "${categoryId}" page ${page}`);
+        } catch (err) {
+          console.warn(`⚠️ Error caching category: ${err.message}`);
+        }
+      }
+    }
+
+    res.json({
+      deals,
+      meta: {
+        categoryId,
+        page,
+        total: deals.length,
+        cached
+      }
+    });
+  } catch (error) {
+    console.error('❌ Error getting category deals:', error);
+    res.status(500).json({ error: 'Failed to fetch category deals', message: error.message });
   }
 });
 

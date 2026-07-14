@@ -5,11 +5,13 @@
 // ── State ────────────────────────────────────────────────────────
 let state = {
   deals: [],
+  categoryDeals: [], // live category deals
   searchResults: [], // IDs of games returned by remote searches
   regions: [],
   rates: {},
   status: {},
   meta: {},
+  activeTab: 'catalog', // 'catalog' or 'hot-deals'
   filters: {
     search: '',
     onSale: false,
@@ -65,18 +67,22 @@ async function init() {
   setupFilters();
   setupKeyboardShortcuts();
 
+  // Tab switch listeners
+  $('#tab-catalog').addEventListener('click', () => switchTab('catalog'));
+  $('#tab-hot-deals').addEventListener('click', () => switchTab('hot-deals'));
+
   await fetchData();
 
   hideLoading();
   renderStats(state.meta);
-  renderDeals(state.deals);
+  renderDeals();
   updateStatusBadge();
 
   // Auto-refresh every 5 minutes
   refreshInterval = setInterval(async () => {
     await fetchData();
     renderStats(state.meta);
-    renderDeals(state.deals);
+    renderDeals();
     updateStatusBadge();
   }, 5 * 60 * 1000);
 }
@@ -163,13 +169,15 @@ function animateNumber(el, target) {
 // RENDERING — DEALS
 // ═══════════════════════════════════════════════════════════════
 
-function renderDeals(deals) {
+function renderDeals() {
   const grid = DOM.dealsGrid();
   const emptyState = DOM.emptyState();
   if (!grid) return;
 
+  const dealsToRender = state.activeTab === 'catalog' ? state.deals : state.categoryDeals;
+
   // Apply filters
-  let filtered = filterDeals(deals);
+  let filtered = filterDeals(dealsToRender);
 
   // Apply sort
   filtered = sortDeals(filtered);
@@ -188,6 +196,36 @@ function renderDeals(deals) {
     const card = createDealCard(deal, i);
     grid.appendChild(card);
   });
+}
+
+async function switchTab(tab) {
+  if (state.activeTab === tab) return;
+  state.activeTab = tab;
+
+  const catalogBtn = $('#tab-catalog');
+  const hotDealsBtn = $('#tab-hot-deals');
+
+  if (tab === 'catalog') {
+    catalogBtn.classList.add('active');
+    hotDealsBtn.classList.remove('active');
+    renderDeals();
+  } else {
+    catalogBtn.classList.remove('active');
+    hotDealsBtn.classList.add('active');
+
+    // If we haven't loaded category deals yet, fetch them!
+    if (state.categoryDeals.length === 0) {
+      showLoading();
+      try {
+        const res = await fetch('/api/deals/category?id=d1fa27b1-da1f-4c4b-8e7a-997e59b787f7').then(r => r.json());
+        state.categoryDeals = res.deals || [];
+      } catch (err) {
+        console.error('Error fetching category deals:', err);
+      }
+      hideLoading();
+    }
+    renderDeals();
+  }
 }
 
 function filterDeals(deals) {
