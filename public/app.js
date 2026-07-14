@@ -71,6 +71,28 @@ async function init() {
   $('#tab-catalog').addEventListener('click', () => switchTab('catalog'));
   $('#tab-hot-deals').addEventListener('click', () => switchTab('hot-deals'));
 
+  // Regions settings click listeners
+  const regionsBtn = $('#btn-regions-settings');
+  if (regionsBtn) {
+    regionsBtn.addEventListener('click', openRegionsSettings);
+  }
+  const regionsModalClose = $('#regions-modal-close');
+  if (regionsModalClose) {
+    regionsModalClose.addEventListener('click', closeRegionsSettings);
+  }
+  const regionsModalOverlay = $('#regions-modal-overlay');
+  if (regionsModalOverlay) {
+    regionsModalOverlay.addEventListener('click', closeRegionsSettings);
+  }
+  const regionsSelectAll = $('#btn-regions-select-all');
+  if (regionsSelectAll) {
+    regionsSelectAll.addEventListener('click', () => toggleAllRegions(true));
+  }
+  const regionsClearAll = $('#btn-regions-clear-all');
+  if (regionsClearAll) {
+    regionsClearAll.addEventListener('click', () => toggleAllRegions(false));
+  }
+
   await fetchData();
 
   hideLoading();
@@ -106,6 +128,20 @@ async function fetchData() {
     state.regions = regionsRes.regions || [];
     state.rates = ratesRes.rates || {};
     state.status = statusRes || {};
+
+    // Load active regions from localStorage or default to all
+    const cachedRegions = localStorage.getItem('activeRegions');
+    if (cachedRegions) {
+      try {
+        state.activeRegions = JSON.parse(cachedRegions);
+      } catch {
+        state.activeRegions = [];
+      }
+    }
+    if (!state.activeRegions || state.activeRegions.length === 0) {
+      state.activeRegions = state.regions.map(r => r.code);
+    }
+
     state.loading = false;
   } catch (err) {
     console.error('Error fetching data:', err);
@@ -259,7 +295,11 @@ function sortDeals(deals) {
   const sorted = [...deals];
   switch (state.filters.sort) {
     case 'price':
-      sorted.sort((a, b) => (a.bestPrice?.effectivePriceUSD || 999) - (b.bestPrice?.effectivePriceUSD || 999));
+      sorted.sort((a, b) => {
+        const aBest = getBestPriceForActiveRegions(a);
+        const bBest = getBestPriceForActiveRegions(b);
+        return (aBest?.effectivePriceUSD || 999) - (bBest?.effectivePriceUSD || 999);
+      });
       break;
     case 'discount':
       sorted.sort((a, b) => {
@@ -290,8 +330,9 @@ function createDealCard(deal, index) {
   article.dataset.id = deal.id;
   article.style.animationDelay = `${index * 0.06}s`;
 
-  // Find emoji for best price region
-  const bestRegion = state.regions.find(r => r.code === deal.bestPrice?.regionCode);
+  // Find emoji for best price region (dynamically filtered by active regions)
+  const bestPrice = getBestPriceForActiveRegions(deal);
+  const bestRegion = state.regions.find(r => r.code === bestPrice?.regionCode);
   const bestEmoji = bestRegion?.emoji || '🏆';
 
   // Find US price for "original price" display
@@ -299,8 +340,17 @@ function createDealCard(deal, index) {
   const originalPriceUS = usPrice?.originalPriceUSD;
 
   // Store URL for best deal (direct link to cheapest PS Store)
-  const bestStoreUrl = deal.bestPrice?.storeUrl || deal.bestStoreUrl || null;
-  const bestRegionName = bestRegion?.name || deal.bestPrice?.regionCode || '';
+  const bestStoreUrl = bestPrice?.storeUrl || deal.bestStoreUrl || null;
+  const bestRegionName = bestRegion?.name || bestPrice?.regionCode || '';
+
+  // Calculate savings vs Peru dynamically
+  const homePriceObj = deal.prices?.find(p => p.regionCode === 'PE');
+  let savingsVsHome = 0;
+  if (homePriceObj?.effectivePriceUSD > 0 && bestPrice) {
+    savingsVsHome = parseFloat(
+      ((homePriceObj.effectivePriceUSD - bestPrice.effectivePriceUSD) / homePriceObj.effectivePriceUSD * 100).toFixed(1)
+    );
+  }
 
   // Image with fallback to gradient
   const imgId = `img-${deal.id}`;
@@ -333,12 +383,12 @@ function createDealCard(deal, index) {
     <div class="card-body">
       <div class="card-prices">
         <div class="price-row best">
-          <span class="price-label">🏆 Mejor Precio (${escapeHtml(deal.bestPrice?.regionCode || '??')} ${bestEmoji})</span>
-          <span class="price-value price-best">$${(deal.bestPrice?.effectivePriceUSD || 0).toFixed(2)}</span>
+          <span class="price-label">🏆 Mejor Precio (${escapeHtml(bestPrice?.regionCode || '??')} ${bestEmoji})</span>
+          <span class="price-value price-best">${bestPrice ? `$${bestPrice.effectivePriceUSD.toFixed(2)}` : 'N/A'}</span>
         </div>
         <div class="price-row home">
           <span class="price-label">🇵🇪 Perú</span>
-          <span class="price-value">$${(deal.homePrice?.effectivePriceUSD || deal.prices?.find(p=>p.regionCode==='PE')?.effectivePriceUSD || 0).toFixed(2)}</span>
+          <span class="price-value">$${(homePriceObj?.effectivePriceUSD || 0).toFixed(2)}</span>
         </div>
         ${deal.onSale && originalPriceUS != null ? `
           <div class="price-row original">
@@ -347,8 +397,8 @@ function createDealCard(deal, index) {
           </div>
         ` : ''}
       </div>
-      ${deal.savingsVsHome > 0 ? `
-        <div class="savings-badge">💰 Ahorras ${deal.savingsVsHome.toFixed(0)}% vs Perú</div>
+      ${savingsVsHome > 0 ? `
+        <div class="savings-badge">💰 Ahorras ${savingsVsHome.toFixed(0)}% vs Perú</div>
       ` : ''}
       <div class="card-meta">
         <span class="rating">⭐ ${deal.rating || '—'}</span>
@@ -370,7 +420,8 @@ function createDealCard(deal, index) {
 // ═══════════════════════════════════════════════════════════════
 
 function openComparison(gameId) {
-  const deal = state.deals.find(d => d.id === gameId);
+  // Try to find the game in catalog or categoryDeals
+  const deal = state.deals.find(d => d.id === gameId) || state.categoryDeals.find(d => d.id === gameId);
   if (!deal) return;
 
   state.selectedGame = deal;
@@ -384,12 +435,16 @@ function openComparison(gameId) {
   DOM.modalHeader().style.backgroundSize = 'cover';
   DOM.modalHeader().style.backgroundPosition = 'center';
 
-  // Build price table
-  const prices = [...(deal.prices || [])].sort((a, b) => a.effectivePriceUSD - b.effectivePriceUSD);
-  const homePriceObj = deal.homePrice || deal.prices?.find(p => p.regionCode === 'PE');
+  // Build price table filtered by active regions
+  const prices = [...(deal.prices || [])]
+    .filter(p => state.activeRegions.includes(p.regionCode))
+    .sort((a, b) => a.effectivePriceUSD - b.effectivePriceUSD);
+
+  const homePriceObj = deal.prices?.find(p => p.regionCode === 'PE');
   const homePriceUSD = homePriceObj?.effectivePriceUSD || 0;
-  const cheapestCode = deal.bestPrice?.regionCode;
-  const worstCode = deal.worstPrice?.regionCode;
+
+  const cheapestCode = prices[0]?.regionCode;
+  const worstCode = prices[prices.length - 1]?.regionCode;
 
   const tableBody = DOM.priceTableBody();
   tableBody.innerHTML = '';
@@ -515,7 +570,13 @@ function renderSavingsSummary(deal, prices) {
   const best = prices[0];
   const worst = prices[prices.length - 1];
   const home = prices.find(p => p.regionCode === 'PE');
-  const savingsVsHome = deal.savingsVsHome || 0;
+  
+  let savingsVsHome = 0;
+  if (home?.effectivePriceUSD > 0 && best) {
+    savingsVsHome = parseFloat(
+      ((home.effectivePriceUSD - best.effectivePriceUSD) / home.effectivePriceUSD * 100).toFixed(1)
+    );
+  }
 
   summary.innerHTML = `
     <div class="savings-summary-item">
@@ -812,4 +873,71 @@ function formatEndsAt(endsAtStr) {
     const diffMinutes = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60));
     return `Faltan ${diffMinutes}m`;
   }
+}
+
+function getBestPriceForActiveRegions(deal) {
+  if (!deal || !deal.prices) return null;
+  const activePrices = deal.prices.filter(p => p.available && state.activeRegions.includes(p.regionCode));
+  if (activePrices.length === 0) return null;
+  const sorted = [...activePrices].sort((a, b) => a.effectivePriceUSD - b.effectivePriceUSD);
+  return sorted[0];
+}
+
+function openRegionsSettings() {
+  renderRegionsList();
+  $('#regions-modal').hidden = false;
+  document.body.style.overflow = 'hidden';
+}
+
+function closeRegionsSettings() {
+  $('#regions-modal').hidden = true;
+  document.body.style.overflow = '';
+}
+
+function renderRegionsList() {
+  const container = $('#regions-checkbox-list');
+  if (!container) return;
+
+  container.innerHTML = '';
+  state.regions.forEach(region => {
+    const isActive = state.activeRegions.includes(region.code);
+    const label = document.createElement('label');
+    label.className = 'region-checkbox-label';
+    label.innerHTML = `
+      <input type="checkbox" value="${region.code}" ${isActive ? 'checked' : ''} />
+      <span>${region.emoji} ${escapeHtml(region.name)}</span>
+    `;
+
+    // Listen to changes
+    label.querySelector('input').addEventListener('change', (e) => {
+      if (e.target.checked) {
+        if (!state.activeRegions.includes(region.code)) {
+          state.activeRegions.push(region.code);
+        }
+      } else {
+        // Prevent disabling ALL regions (keep at least one)
+        if (state.activeRegions.length > 1) {
+          state.activeRegions = state.activeRegions.filter(c => c !== region.code);
+        } else {
+          e.target.checked = true; // Undo check
+        }
+      }
+      localStorage.setItem('activeRegions', JSON.stringify(state.activeRegions));
+      renderDeals();
+    });
+
+    container.appendChild(label);
+  });
+}
+
+function toggleAllRegions(select) {
+  if (select) {
+    state.activeRegions = state.regions.map(r => r.code);
+  } else {
+    // Keep at least home region PE enabled to avoid empty state bugs
+    state.activeRegions = ['PE'];
+  }
+  localStorage.setItem('activeRegions', JSON.stringify(state.activeRegions));
+  renderRegionsList();
+  renderDeals();
 }

@@ -161,6 +161,10 @@
           </select>
           <svg class="sort-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
         </div>
+
+        <button id="btn-regions-settings" class="btn-regions-settings">
+          🌍 Regiones
+        </button>
       </div>
     </section>
 
@@ -246,6 +250,35 @@
           <!-- Savings Summary -->
           <div class="savings-summary" id="savings-summary">
             <!-- Filled by JS -->
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ─── Regions Configuration Modal ─── -->
+    <div id="regions-modal" class="modal" role="dialog" aria-modal="true" aria-labelledby="regions-modal-title" hidden>
+      <div class="modal-overlay" id="regions-modal-overlay"></div>
+      <div class="modal-content" style="max-width: 500px;">
+        <button class="modal-close" id="regions-modal-close" aria-label="Cerrar configuración">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+          </svg>
+        </button>
+
+        <div class="modal-header">
+          <h2 id="regions-modal-title">🌍 Configurar Regiones Activas</h2>
+        </div>
+
+        <div class="modal-body" style="padding-top: 16px;">
+          <p style="color: var(--text-muted); font-size: 0.88rem; margin-bottom: 20px; line-height: 1.5;">
+            Selecciona las regiones que deseas incluir en la comparación de precios. Los juegos ocultarán automáticamente los precios de las regiones desactivadas y recalcularán el mejor precio basándose en las que mantengas activas.
+          </p>
+          <div id="regions-checkbox-list" class="regions-checkbox-list">
+            <!-- Filled dynamically by JS -->
+          </div>
+          <div style="display: flex; gap: 12px; margin-top: 24px;">
+            <button id="btn-regions-select-all" class="btn-regions-action" style="flex: 1;">Activar Todas</button>
+            <button id="btn-regions-clear-all" class="btn-regions-action" style="flex: 1; background: transparent; border: 1px solid var(--border-glass); color: var(--text-muted);">Desactivar Todas</button>
           </div>
         </div>
       </div>

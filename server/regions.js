@@ -7,6 +7,7 @@
 const REGIONS = [
   { code: 'PE', name: 'Perú',          emoji: '🇵🇪', currency: 'PEN', storeCurrency: 'USD', currencySymbol: 'US$', language: 'es-PE', isHome: true  },
   { code: 'US', name: 'Estados Unidos', emoji: '🇺🇸', currency: 'USD', storeCurrency: 'USD', currencySymbol: '$',   language: 'en-US', isHome: false },
+  { code: 'ES', name: 'España',         emoji: '🇪🇸', currency: 'EUR', storeCurrency: 'EUR', currencySymbol: '€',   language: 'es-ES', isHome: false },
   { code: 'TR', name: 'Turquía',        emoji: '🇹🇷', currency: 'TRY', storeCurrency: 'TRY', currencySymbol: '₺',   language: 'tr-TR', isHome: false },
   { code: 'AR', name: 'Argentina',      emoji: '🇦🇷', currency: 'ARS', storeCurrency: 'USD', currencySymbol: 'US$', language: 'es-AR', isHome: false },
   { code: 'BR', name: 'Brasil',         emoji: '🇧🇷', currency: 'BRL', storeCurrency: 'BRL', currencySymbol: 'R$',  language: 'pt-BR', isHome: false },

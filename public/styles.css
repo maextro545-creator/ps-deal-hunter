@@ -1447,3 +1447,76 @@ body::before {
   border: none;
   box-shadow: 0 4px 15px rgba(108, 92, 231, 0.4);
 }
+
+.btn-regions-settings {
+  background: var(--bg-card);
+  border: 1px solid var(--border-glass);
+  color: var(--text-muted);
+  padding: 10px 16px;
+  border-radius: var(--radius-sm);
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all var(--transition-normal);
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 48px;
+}
+
+.btn-regions-settings:hover {
+  background: var(--bg-card-hover);
+  color: var(--text-main);
+  border-color: var(--border-hover);
+}
+
+.regions-checkbox-list {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.region-checkbox-label {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: var(--bg-card);
+  border: 1px solid var(--border-glass);
+  padding: 10px 14px;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: var(--text-main);
+  transition: all var(--transition-normal);
+}
+
+.region-checkbox-label:hover {
+  background: var(--bg-card-hover);
+  border-color: var(--border-hover);
+}
+
+.region-checkbox-label input {
+  accent-color: var(--accent-purple);
+  width: 16px;
+  height: 16px;
+  cursor: pointer;
+}
+
+.btn-regions-action {
+  background: linear-gradient(135deg, var(--accent-purple), var(--accent-magenta));
+  color: white;
+  border: none;
+  padding: 12px 18px;
+  border-radius: var(--radius-sm);
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all var(--transition-normal);
+  text-align: center;
+}
+
+.btn-regions-action:hover {
+  opacity: 0.9;
+  transform: translateY(-1px);
+}
