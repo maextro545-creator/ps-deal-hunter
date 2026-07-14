@@ -1068,6 +1068,7 @@ async function scrapeRegionCategoryProducts(region, categoryId, page) {
     const products = Object.entries(apolloState)
       .filter(([k, v]) => v.__typename === 'Product' || k.startsWith('Product:'))
       .map(([, v]) => {
+        const classification = (v.storeDisplayClassification || v.localizedStoreDisplayClassification || '').toLowerCase().replace('_', ' ');
         const lowerName = (v.name || '').toLowerCase();
         const hasRejectWord = ['upgrade', 'mejora', 'pack', 'bundle', 'pass', 'pase', 'monedas', 'coins', 'points', 'puntos', 'dlc', 'add-on', 'addon'].some(w => lowerName.includes(w));
 
