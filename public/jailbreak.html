@@ -1,0 +1,1922 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>PS Jailbreak Lab â€” GuÃ­a Paso a Paso</title>
+  <meta name="description" content="GuÃ­a completa paso a paso para hacer jailbreak a tu PlayStation. PS4 y PS5 â€” aprende a desbloquear tu consola de forma segura." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg-void: #050508;
+      --bg-card: #0d0d14;
+      --bg-card2: #12121c;
+      --accent-blue: #2d6cff;
+      --accent-purple: #8b2dff;
+      --accent-cyan: #00e5ff;
+      --accent-pink: #ff2d78;
+      --accent-green: #00ff88;
+      --accent-orange: #ff8c2d;
+      --text-primary: #f0f0ff;
+      --text-secondary: #9090b0;
+      --text-muted: #505070;
+      --border: rgba(255,255,255,0.07);
+      --border-accent: rgba(45,108,255,0.4);
+      --glow-blue: 0 0 40px rgba(45,108,255,0.35);
+      --glow-purple: 0 0 40px rgba(139,45,255,0.35);
+      --glow-cyan: 0 0 20px rgba(0,229,255,0.4);
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      font-family: 'Outfit', sans-serif;
+      background: var(--bg-void);
+      color: var(--text-primary);
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    /* â”€â”€â”€ NOISE OVERLAY â”€â”€â”€ */
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
+      pointer-events: none;
+      z-index: 0;
+      opacity: 0.5;
+    }
+
+    /* â”€â”€â”€ HERO â”€â”€â”€ */
+    .hero {
+      position: relative;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 2rem;
+      overflow: hidden;
+    }
+
+    .hero-bg {
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(ellipse 80% 60% at 50% 0%, rgba(45,108,255,0.18) 0%, transparent 70%),
+                  radial-gradient(ellipse 60% 50% at 80% 80%, rgba(139,45,255,0.14) 0%, transparent 70%),
+                  radial-gradient(ellipse 50% 40% at 20% 70%, rgba(0,229,255,0.1) 0%, transparent 70%);
+    }
+
+    .hero-grid {
+      position: absolute;
+      inset: 0;
+      background-image:
+        linear-gradient(rgba(45,108,255,0.06) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(45,108,255,0.06) 1px, transparent 1px);
+      background-size: 60px 60px;
+      mask-image: radial-gradient(ellipse 80% 80% at 50% 50%, black 0%, transparent 100%);
+    }
+
+    .hero-content { position: relative; z-index: 1; max-width: 900px; }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: rgba(45,108,255,0.12);
+      border: 1px solid rgba(45,108,255,0.35);
+      border-radius: 50px;
+      padding: 6px 18px;
+      font-size: 0.8rem;
+      font-weight: 600;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--accent-cyan);
+      margin-bottom: 2rem;
+      animation: fadeDown 0.8s ease both;
+    }
+    .badge::before { content: ''; width: 6px; height: 6px; border-radius: 50%; background: var(--accent-cyan); box-shadow: var(--glow-cyan); animation: pulse 2s infinite; }
+
+    .hero h1 {
+      font-size: clamp(2.8rem, 7vw, 6rem);
+      font-weight: 900;
+      line-height: 1.05;
+      letter-spacing: -0.03em;
+      animation: fadeDown 0.8s 0.1s ease both;
+    }
+
+    .hero h1 .gradient {
+      background: linear-gradient(135deg, var(--accent-blue), var(--accent-cyan), var(--accent-purple));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .hero-sub {
+      margin-top: 1.5rem;
+      font-size: clamp(1rem, 2vw, 1.25rem);
+      font-weight: 400;
+      color: var(--text-secondary);
+      max-width: 600px;
+      margin-inline: auto;
+      line-height: 1.7;
+      animation: fadeDown 0.8s 0.2s ease both;
+    }
+
+    .hero-ctas {
+      margin-top: 2.5rem;
+      display: flex;
+      gap: 1rem;
+      justify-content: center;
+      flex-wrap: wrap;
+      animation: fadeDown 0.8s 0.3s ease both;
+    }
+
+    .btn-primary {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: linear-gradient(135deg, var(--accent-blue), var(--accent-purple));
+      color: #fff;
+      font-family: 'Outfit', sans-serif;
+      font-weight: 700;
+      font-size: 1rem;
+      padding: 14px 32px;
+      border-radius: 12px;
+      border: none;
+      cursor: pointer;
+      text-decoration: none;
+      box-shadow: 0 0 30px rgba(45,108,255,0.4);
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+    .btn-primary:hover { transform: translateY(-3px); box-shadow: 0 0 50px rgba(45,108,255,0.6); }
+
+    .btn-secondary {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: rgba(255,255,255,0.05);
+      border: 1px solid var(--border);
+      color: var(--text-primary);
+      font-family: 'Outfit', sans-serif;
+      font-weight: 600;
+      font-size: 1rem;
+      padding: 14px 32px;
+      border-radius: 12px;
+      cursor: pointer;
+      text-decoration: none;
+      transition: background 0.2s, border-color 0.2s;
+    }
+    .btn-secondary:hover { background: rgba(255,255,255,0.1); border-color: rgba(255,255,255,0.2); }
+
+    /* â”€â”€â”€ FLOATING PARTICLES â”€â”€â”€ */
+    .particles { position: absolute; inset: 0; pointer-events: none; z-index: 0; }
+    .particle {
+      position: absolute;
+      border-radius: 50%;
+      animation: float linear infinite;
+    }
+
+    /* â”€â”€â”€ WARNING BANNER â”€â”€â”€ */
+    .warning-section { padding: 0 1rem; margin-bottom: 0; position: relative; z-index: 1; }
+    .warning-card {
+      max-width: 900px;
+      margin: 0 auto;
+      background: rgba(255,140,45,0.08);
+      border: 1px solid rgba(255,140,45,0.4);
+      border-radius: 16px;
+      padding: 1.5rem 2rem;
+      display: flex;
+      gap: 1.5rem;
+      align-items: flex-start;
+    }
+    .warning-icon { font-size: 2rem; flex-shrink: 0; }
+    .warning-card h3 { color: var(--accent-orange); font-size: 1rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 0.5rem; }
+    .warning-card p { color: #c0a070; font-size: 0.92rem; line-height: 1.7; }
+
+    /* â”€â”€â”€ SECTION â”€â”€â”€ */
+    section { position: relative; z-index: 1; padding: 6rem 1rem; }
+
+    .section-label {
+      font-size: 0.75rem;
+      font-weight: 700;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      color: var(--accent-cyan);
+      margin-bottom: 0.75rem;
+    }
+    .section-title {
+      font-size: clamp(1.8rem, 4vw, 2.8rem);
+      font-weight: 800;
+      letter-spacing: -0.02em;
+      line-height: 1.15;
+    }
+    .section-sub {
+      margin-top: 1rem;
+      font-size: 1.05rem;
+      color: var(--text-secondary);
+      max-width: 560px;
+      line-height: 1.7;
+    }
+
+    /* â”€â”€â”€ CONSOLES â”€â”€â”€ */
+    .consoles-section { padding: 5rem 1rem 2rem; }
+    .consoles-grid {
+      max-width: 900px;
+      margin: 3rem auto 0;
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: 1.5rem;
+    }
+
+    .console-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 2rem;
+      cursor: pointer;
+      transition: all 0.3s;
+      position: relative;
+      overflow: hidden;
+    }
+    .console-card::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      border-radius: 20px;
+      opacity: 0;
+      transition: opacity 0.3s;
+    }
+    .console-card.ps4::before { background: radial-gradient(ellipse at 50% 0%, rgba(0,100,255,0.12), transparent 70%); }
+    .console-card.ps5::before { background: radial-gradient(ellipse at 50% 0%, rgba(139,45,255,0.12), transparent 70%); }
+    .console-card:hover { transform: translateY(-6px); border-color: var(--border-accent); }
+    .console-card:hover::before { opacity: 1; }
+    .console-card.active { border-color: var(--accent-blue); box-shadow: var(--glow-blue); }
+
+    .console-emoji { font-size: 3rem; margin-bottom: 1rem; }
+    .console-name { font-size: 1.4rem; font-weight: 800; margin-bottom: 0.5rem; }
+    .console-fw { font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 1rem; }
+    .console-tags { display: flex; flex-wrap: wrap; gap: 6px; }
+    .tag {
+      font-size: 0.72rem;
+      font-weight: 600;
+      padding: 3px 10px;
+      border-radius: 50px;
+      border: 1px solid;
+    }
+    .tag-green { color: var(--accent-green); border-color: rgba(0,255,136,0.3); background: rgba(0,255,136,0.08); }
+    .tag-yellow { color: #ffd700; border-color: rgba(255,215,0,0.3); background: rgba(255,215,0,0.08); }
+    .tag-red { color: var(--accent-pink); border-color: rgba(255,45,120,0.3); background: rgba(255,45,120,0.08); }
+    .tag-blue { color: var(--accent-cyan); border-color: rgba(0,229,255,0.3); background: rgba(0,229,255,0.08); }
+
+    /* â”€â”€â”€ STEPS â”€â”€â”€ */
+    .steps-section {
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 4rem 1rem;
+    }
+    .steps-header { text-align: center; margin-bottom: 4rem; }
+
+    .step-card {
+      display: grid;
+      grid-template-columns: auto 1fr;
+      gap: 2rem;
+      margin-bottom: 2.5rem;
+      align-items: start;
+      opacity: 0;
+      transform: translateY(30px);
+      transition: opacity 0.6s, transform 0.6s;
+    }
+    .step-card.visible { opacity: 1; transform: translateY(0); }
+
+    .step-number-col {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0;
+    }
+    .step-number {
+      width: 56px;
+      height: 56px;
+      border-radius: 16px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.4rem;
+      font-weight: 900;
+      flex-shrink: 0;
+      position: relative;
+    }
+    .step-number.blue { background: linear-gradient(135deg, rgba(45,108,255,0.2), rgba(45,108,255,0.1)); border: 1px solid rgba(45,108,255,0.5); color: var(--accent-blue); }
+    .step-number.purple { background: linear-gradient(135deg, rgba(139,45,255,0.2), rgba(139,45,255,0.1)); border: 1px solid rgba(139,45,255,0.5); color: var(--accent-purple); }
+    .step-number.cyan { background: linear-gradient(135deg, rgba(0,229,255,0.2), rgba(0,229,255,0.1)); border: 1px solid rgba(0,229,255,0.5); color: var(--accent-cyan); }
+    .step-number.green { background: linear-gradient(135deg, rgba(0,255,136,0.2), rgba(0,255,136,0.1)); border: 1px solid rgba(0,255,136,0.5); color: var(--accent-green); }
+    .step-number.pink { background: linear-gradient(135deg, rgba(255,45,120,0.2), rgba(255,45,120,0.1)); border: 1px solid rgba(255,45,120,0.5); color: var(--accent-pink); }
+    .step-number.orange { background: linear-gradient(135deg, rgba(255,140,45,0.2), rgba(255,140,45,0.1)); border: 1px solid rgba(255,140,45,0.5); color: var(--accent-orange); }
+
+    .step-line { width: 2px; flex: 1; min-height: 40px; background: linear-gradient(to bottom, rgba(45,108,255,0.4), transparent); margin-top: 4px; }
+
+    .step-body {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 2rem;
+      transition: border-color 0.3s;
+    }
+    .step-body:hover { border-color: var(--border-accent); }
+
+    .step-title { font-size: 1.2rem; font-weight: 700; margin-bottom: 0.75rem; }
+    .step-desc { color: var(--text-secondary); line-height: 1.75; font-size: 0.97rem; margin-bottom: 1.25rem; }
+
+    .step-items { list-style: none; display: flex; flex-direction: column; gap: 0.6rem; margin-bottom: 1.25rem; }
+    .step-items li {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      font-size: 0.93rem;
+      color: var(--text-secondary);
+      line-height: 1.6;
+    }
+    .step-items li::before { content: 'â€º'; color: var(--accent-cyan); font-weight: 700; font-size: 1.1rem; flex-shrink: 0; margin-top: 1px; }
+
+    .code-block {
+      background: #080812;
+      border: 1px solid rgba(45,108,255,0.2);
+      border-radius: 12px;
+      padding: 1rem 1.25rem;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.82rem;
+      color: var(--accent-cyan);
+      overflow-x: auto;
+      margin: 0.75rem 0;
+      position: relative;
+    }
+    .code-block::before {
+      content: '$ ';
+      color: var(--text-muted);
+    }
+
+    .step-note {
+      background: rgba(45,108,255,0.06);
+      border: 1px solid rgba(45,108,255,0.2);
+      border-radius: 10px;
+      padding: 0.85rem 1.1rem;
+      font-size: 0.87rem;
+      color: #7090d0;
+      display: flex;
+      gap: 8px;
+      align-items: flex-start;
+      margin-top: 1rem;
+    }
+    .step-note-icon { flex-shrink: 0; }
+
+    /* â”€â”€â”€ TOOLS GRID â”€â”€â”€ */
+    .tools-section { padding: 5rem 1rem; background: linear-gradient(to bottom, transparent, rgba(13,13,20,0.8), transparent); }
+    .tools-inner { max-width: 900px; margin: 0 auto; }
+    .tools-grid {
+      margin-top: 3rem;
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 1rem;
+    }
+    .tool-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 1.5rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+      transition: all 0.3s;
+    }
+    .tool-card:hover { transform: translateY(-4px); border-color: rgba(45,108,255,0.35); box-shadow: 0 8px 30px rgba(0,0,0,0.4); }
+    .tool-icon { font-size: 2rem; }
+    .tool-name { font-weight: 700; font-size: 1rem; }
+    .tool-desc { font-size: 0.84rem; color: var(--text-secondary); line-height: 1.6; }
+    .tool-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      font-size: 0.8rem;
+      font-weight: 600;
+      color: var(--accent-cyan);
+      text-decoration: none;
+      margin-top: auto;
+    }
+    .tool-link:hover { text-decoration: underline; }
+
+    /* â”€â”€â”€ FAQ â”€â”€â”€ */
+    .faq-section { max-width: 800px; margin: 0 auto; padding: 5rem 1rem; }
+    .faq-item {
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      margin-bottom: 0.75rem;
+      overflow: hidden;
+      transition: border-color 0.3s;
+    }
+    .faq-item:hover { border-color: var(--border-accent); }
+    .faq-q {
+      width: 100%;
+      background: var(--bg-card);
+      color: var(--text-primary);
+      font-family: 'Outfit', sans-serif;
+      font-size: 1rem;
+      font-weight: 600;
+      padding: 1.25rem 1.5rem;
+      border: none;
+      text-align: left;
+      cursor: pointer;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 1rem;
+    }
+    .faq-arrow { transition: transform 0.3s; color: var(--accent-cyan); flex-shrink: 0; }
+    .faq-item.open .faq-arrow { transform: rotate(180deg); }
+    .faq-a {
+      max-height: 0;
+      overflow: hidden;
+      transition: max-height 0.4s ease;
+      background: var(--bg-card2);
+    }
+    .faq-a-inner { padding: 1.25rem 1.5rem; color: var(--text-secondary); line-height: 1.75; font-size: 0.95rem; }
+    .faq-item.open .faq-a { max-height: 300px; }
+
+    /* â”€â”€â”€ FOOTER â”€â”€â”€ */
+    footer {
+      position: relative;
+      z-index: 1;
+      text-align: center;
+      padding: 3rem 1rem;
+      border-top: 1px solid var(--border);
+      color: var(--text-muted);
+      font-size: 0.85rem;
+      line-height: 2;
+    }
+    footer a { color: var(--accent-cyan); text-decoration: none; }
+    footer a:hover { text-decoration: underline; }
+
+    /* â”€â”€â”€ NAVBAR â”€â”€â”€ */
+    nav {
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      z-index: 100;
+      padding: 1rem 2rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: rgba(5,5,8,0.75);
+      backdrop-filter: blur(20px);
+      border-bottom: 1px solid var(--border);
+    }
+    .nav-logo {
+      font-weight: 900;
+      font-size: 1.2rem;
+      background: linear-gradient(135deg, var(--accent-blue), var(--accent-cyan));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .nav-logo-icon { -webkit-text-fill-color: initial; font-size: 1.3rem; }
+    .nav-links { display: flex; gap: 2rem; list-style: none; }
+    .nav-links a { color: var(--text-secondary); text-decoration: none; font-weight: 500; font-size: 0.92rem; transition: color 0.2s; }
+    .nav-links a:hover { color: var(--text-primary); }
+    @media (max-width: 640px) { .nav-links { display: none; } }
+
+    /* â”€â”€â”€ PROGRESS â”€â”€â”€ */
+    .progress-bar {
+      position: fixed;
+      top: 0; left: 0;
+      height: 2px;
+      background: linear-gradient(90deg, var(--accent-blue), var(--accent-cyan), var(--accent-purple));
+      z-index: 200;
+      transition: width 0.1s;
+      box-shadow: 0 0 10px rgba(0,229,255,0.6);
+    }
+
+    /* â”€â”€â”€ ANIMATIONS â”€â”€â”€ */
+    @keyframes fadeDown {
+      from { opacity: 0; transform: translateY(-20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    @keyframes pulse {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.5; transform: scale(0.8); }
+    }
+    @keyframes float {
+      0% { transform: translateY(100vh) scale(0); opacity: 0; }
+      10% { opacity: 1; }
+      90% { opacity: 1; }
+      100% { transform: translateY(-10vh) scale(1); opacity: 0; }
+    }
+
+    /* â”€â”€â”€ SELECTOR TABS â”€â”€â”€ */
+    .tabs {
+      display: flex;
+      gap: 0.5rem;
+      justify-content: center;
+      margin: 2rem auto;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 6px;
+      width: fit-content;
+    }
+    .tab-btn {
+      padding: 10px 28px;
+      border-radius: 10px;
+      border: none;
+      cursor: pointer;
+      font-family: 'Outfit', sans-serif;
+      font-weight: 600;
+      font-size: 0.95rem;
+      color: var(--text-secondary);
+      background: transparent;
+      transition: all 0.25s;
+    }
+    .tab-btn.active {
+      background: linear-gradient(135deg, var(--accent-blue), var(--accent-purple));
+      color: #fff;
+      box-shadow: 0 0 20px rgba(45,108,255,0.4);
+    }
+
+    .guide-content { display: none; }
+    .guide-content.active { display: block; }
+
+    /* â”€â”€â”€ COMPATIBILITY TABLE â”€â”€â”€ */
+    .compat-section { max-width: 900px; margin: 0 auto; padding: 4rem 1rem; }
+    table { width: 100%; border-collapse: collapse; }
+    thead th {
+      background: var(--bg-card2);
+      padding: 1rem 1.25rem;
+      text-align: left;
+      font-size: 0.8rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: var(--text-secondary);
+      border-bottom: 1px solid var(--border);
+    }
+    tbody tr { border-bottom: 1px solid var(--border); transition: background 0.2s; }
+    tbody tr:hover { background: rgba(255,255,255,0.03); }
+    tbody td { padding: 1rem 1.25rem; font-size: 0.92rem; color: var(--text-secondary); }
+    tbody td:first-child { color: var(--text-primary); font-weight: 600; }
+
+    .status-dot {
+      display: inline-flex; align-items: center; gap: 6px; font-weight: 600; font-size: 0.85rem;
+    }
+    .dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+    .dot-green { background: var(--accent-green); box-shadow: 0 0 8px var(--accent-green); }
+    .dot-yellow { background: #ffd700; box-shadow: 0 0 8px #ffd700; }
+    .dot-red { background: var(--accent-pink); box-shadow: 0 0 8px var(--accent-pink); }
+
+    /* â”€â”€â”€ SCROLLBAR â”€â”€â”€ */
+    ::-webkit-scrollbar { width: 6px; }
+    ::-webkit-scrollbar-track { background: var(--bg-void); }
+    ::-webkit-scrollbar-thumb { background: rgba(45,108,255,0.4); border-radius: 3px; }
+    ::-webkit-scrollbar-thumb:hover { background: rgba(45,108,255,0.7); }
+
+    .center { text-align: center; }
+    .mt-2 { margin-top: 2rem; }
+
+    /* â”€â”€â”€ ROMS / GAMES LIBRARY â”€â”€â”€ */
+    .roms-section { padding: 6rem 1rem; }
+    .roms-inner { max-width: 1100px; margin: 0 auto; }
+
+    .search-bar-wrap {
+      position: relative;
+      margin: 2.5rem 0 1.5rem;
+    }
+    .search-icon {
+      position: absolute;
+      left: 1.1rem;
+      top: 50%;
+      transform: translateY(-50%);
+      font-size: 1.1rem;
+      pointer-events: none;
+    }
+    #gameSearch {
+      width: 100%;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 1rem 1rem 1rem 3rem;
+      font-family: 'Outfit', sans-serif;
+      font-size: 1rem;
+      color: var(--text-primary);
+      outline: none;
+      transition: border-color 0.3s, box-shadow 0.3s;
+    }
+    #gameSearch:focus {
+      border-color: var(--accent-blue);
+      box-shadow: 0 0 0 3px rgba(45,108,255,0.15);
+    }
+    #gameSearch::placeholder { color: var(--text-muted); }
+
+    .filter-row {
+      display: flex;
+      gap: 0.6rem;
+      flex-wrap: wrap;
+      margin-bottom: 2rem;
+    }
+    .filter-btn {
+      padding: 7px 18px;
+      border-radius: 50px;
+      border: 1px solid var(--border);
+      background: var(--bg-card);
+      color: var(--text-secondary);
+      font-family: 'Outfit', sans-serif;
+      font-size: 0.85rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .filter-btn:hover { border-color: rgba(45,108,255,0.4); color: var(--text-primary); }
+    .filter-btn.active {
+      background: linear-gradient(135deg, var(--accent-blue), var(--accent-purple));
+      border-color: transparent;
+      color: #fff;
+      box-shadow: 0 0 15px rgba(45,108,255,0.3);
+    }
+
+    .platform-tabs {
+      display: flex;
+      gap: 0.5rem;
+      margin-bottom: 2rem;
+    }
+    .plat-btn {
+      padding: 9px 24px;
+      border-radius: 10px;
+      border: 1px solid var(--border);
+      background: var(--bg-card);
+      color: var(--text-secondary);
+      font-family: 'Outfit', sans-serif;
+      font-size: 0.9rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .plat-btn.active {
+      background: rgba(139,45,255,0.15);
+      border-color: rgba(139,45,255,0.5);
+      color: var(--accent-purple);
+    }
+
+    .games-stats {
+      font-size: 0.88rem;
+      color: var(--text-muted);
+      margin-bottom: 1.5rem;
+    }
+    .games-stats span { color: var(--accent-cyan); font-weight: 700; }
+
+    .games-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      gap: 1.2rem;
+    }
+
+    .game-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      overflow: hidden;
+      cursor: pointer;
+      transition: all 0.3s;
+      position: relative;
+      display: flex;
+      flex-direction: column;
+    }
+    .game-card:hover {
+      transform: translateY(-6px) scale(1.02);
+      border-color: rgba(139,45,255,0.5);
+      box-shadow: 0 12px 40px rgba(0,0,0,0.5), 0 0 20px rgba(139,45,255,0.15);
+    }
+    .game-card:hover .game-download-overlay { opacity: 1; }
+
+    .game-cover {
+      width: 100%;
+      aspect-ratio: 3/4;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 3.5rem;
+      position: relative;
+      overflow: hidden;
+      background: #0a0a14;
+    }
+    .game-cover-bg { position: absolute; inset: 0; opacity: 0.7; }
+    .game-cover-emoji { position: relative; z-index: 1; filter: drop-shadow(0 4px 12px rgba(0,0,0,0.5)); }
+    .game-cover-img {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      z-index: 2;
+      opacity: 0;
+      transition: opacity 0.5s ease;
+    }
+    .game-cover-img.loaded { opacity: 1; }
+
+    @keyframes shimmer {
+      0% { background-position: -200% 0; }
+      100% { background-position: 200% 0; }
+    }
+    .skeleton-shimmer {
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.05) 50%, transparent 100%);
+      background-size: 200% 100%;
+      animation: shimmer 1.5s infinite;
+      z-index: 1;
+    }
+    .skeleton-shimmer.done { display: none; }
+
+    .game-download-overlay {
+      position: absolute;
+      inset: 0;
+      z-index: 5;
+      background: linear-gradient(to top, rgba(0,0,0,0.92) 0%, rgba(0,0,0,0.3) 55%, transparent 100%);
+      display: flex;
+      align-items: flex-end;
+      padding: 0.85rem;
+      opacity: 0;
+      transition: opacity 0.3s;
+    }
+    .game-dl-btn {
+      width: 100%;
+      background: linear-gradient(135deg, var(--accent-blue), var(--accent-purple));
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      padding: 8px 10px;
+      font-family: 'Outfit', sans-serif;
+      font-weight: 700;
+      font-size: 0.8rem;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      box-shadow: 0 0 20px rgba(45,108,255,0.5);
+    }
+
+    .game-info { padding: 0.85rem; margin-top: auto; }
+    .game-title {
+      font-size: 0.88rem;
+      font-weight: 700;
+      line-height: 1.3;
+      margin-bottom: 0.4rem;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+    .game-meta { display: flex; align-items: center; justify-content: space-between; gap: 4px; }
+    .game-genre { font-size: 0.72rem; color: var(--text-muted); font-weight: 500; }
+    .game-status { font-size: 0.7rem; font-weight: 700; padding: 2px 8px; border-radius: 50px; }
+    .status-available { background: rgba(0,255,136,0.12); color: var(--accent-green); border: 1px solid rgba(0,255,136,0.25); }
+    .status-region { background: rgba(0,229,255,0.1); color: var(--accent-cyan); border: 1px solid rgba(0,229,255,0.25); }
+    .status-partial { background: rgba(255,215,0,0.1); color: #ffd700; border: 1px solid rgba(255,215,0,0.25); }
+
+    .game-plat-badge {
+      position: absolute;
+      top: 8px; right: 8px;
+      font-size: 0.65rem; font-weight: 800;
+      padding: 3px 8px; border-radius: 6px;
+      letter-spacing: 0.05em; z-index: 6;
+    }
+    .badge-ps5 { background: rgba(139,45,255,0.8); color: #fff; }
+    .badge-ps4 { background: rgba(45,108,255,0.8); color: #fff; }
+    .badge-both { background: linear-gradient(135deg,rgba(45,108,255,0.8),rgba(139,45,255,0.8)); color:#fff; }
+
+    .no-results { grid-column: 1/-1; text-align: center; padding: 4rem 2rem; color: var(--text-muted); }
+    .no-results-icon { font-size: 3rem; margin-bottom: 1rem; }
+
+    /* â”€â”€â”€ DOWNLOAD MODAL â”€â”€â”€ */
+    .dl-modal-overlay {
+      position: fixed; inset: 0;
+      background: rgba(0,0,0,0.85);
+      backdrop-filter: blur(12px);
+      z-index: 2000;
+      display: flex; align-items: center; justify-content: center;
+      padding: 1rem;
+      opacity: 0; pointer-events: none;
+      transition: opacity 0.3s;
+    }
+    .dl-modal-overlay.open { opacity: 1; pointer-events: all; }
+    .dl-modal {
+      background: var(--bg-card2);
+      border: 1px solid rgba(45,108,255,0.35);
+      border-radius: 24px;
+      max-width: 520px; width: 100%;
+      overflow: hidden;
+      transform: scale(0.9); transition: transform 0.3s;
+      box-shadow: 0 0 80px rgba(45,108,255,0.2);
+    }
+    .dl-modal-overlay.open .dl-modal { transform: scale(1); }
+    .dl-modal-header {
+      display: grid;
+      grid-template-columns: 120px 1fr;
+    }
+    .dl-modal-img { width: 120px; height: 160px; object-fit: cover; display: block; }
+    .dl-modal-img-fallback {
+      width: 120px; height: 160px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 3rem;
+    }
+    .dl-modal-info {
+      padding: 1.25rem 1.5rem;
+      display: flex; flex-direction: column; justify-content: center; gap: 0.4rem;
+      background: linear-gradient(135deg, rgba(45,108,255,0.06), transparent);
+    }
+    .dl-modal-title { font-size: 1.15rem; font-weight: 800; line-height: 1.2; }
+    .dl-modal-year { font-size: 0.82rem; color: var(--text-muted); }
+    .dl-modal-body { padding: 1.25rem 1.5rem; }
+    .dl-modal-label { font-size: 0.72rem; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: var(--text-muted); margin-bottom: 0.75rem; }
+    .dl-links { display: flex; flex-direction: column; gap: 0.6rem; }
+    .dl-link {
+      display: flex; align-items: center; gap: 0.75rem;
+      background: var(--bg-card); border: 1px solid var(--border);
+      border-radius: 12px; padding: 0.85rem 1rem;
+      text-decoration: none; color: var(--text-primary);
+      transition: all 0.2s;
+    }
+    .dl-link:hover { border-color: rgba(45,108,255,0.4); background: rgba(45,108,255,0.06); }
+    .dl-link-icon { font-size: 1.2rem; flex-shrink: 0; }
+    .dl-link-info { flex: 1; }
+    .dl-link-name { font-weight: 700; font-size: 0.88rem; }
+    .dl-link-sub { font-size: 0.74rem; color: var(--text-muted); margin-top: 2px; }
+    .dl-link-arrow { color: var(--accent-cyan); }
+    .dl-modal-close {
+      width: 100%; margin-top: 1rem;
+      background: transparent; border: 1px solid var(--border);
+      color: var(--text-secondary);
+      font-family: 'Outfit', sans-serif; font-size: 0.9rem; font-weight: 600;
+      padding: 0.75rem; border-radius: 10px; cursor: pointer;
+      transition: background 0.2s;
+    }
+    .dl-modal-close:hover { background: rgba(255,255,255,0.05); }
+
+    /* Sites grid */
+    .sites-grid {
+      margin-top: 3rem;
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: 1rem;
+    }
+    .site-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 1.5rem;
+      transition: all 0.3s;
+      text-decoration: none;
+      display: block;
+    }
+    .site-card:hover { border-color: rgba(139,45,255,0.4); transform: translateY(-3px); }
+    .site-icon { font-size: 2rem; margin-bottom: 0.75rem; }
+    .site-name { font-size: 1rem; font-weight: 700; color: var(--text-primary); margin-bottom: 0.4rem; }
+    .site-desc { font-size: 0.84rem; color: var(--text-secondary); line-height: 1.6; margin-bottom: 0.75rem; }
+    .site-url { font-size: 0.78rem; color: var(--accent-cyan); font-family: 'JetBrains Mono', monospace; }
+  </style>
+</head>
+<body>
+
+  <!-- PROGRESS BAR -->
+  <div class="progress-bar" id="progressBar" style="width:0%"></div>
+
+  <!-- NAVBAR -->
+  <nav>
+    <div class="nav-logo"><span class="nav-logo-icon">ðŸŽ®</span> PS Jailbreak Lab</div>
+    <ul class="nav-links">
+      <li><a href="#consoles">Consolas</a></li>
+      <li><a href="#guia">GuÃ­a</a></li>
+      <li><a href="#herramientas">Herramientas</a></li>
+      <li><a href="#compat">Compatibilidad</a></li>
+      <li><a href="#faq">FAQ</a></li>
+      <li><a href="#roms" style="color:var(--accent-cyan);font-weight:700">ðŸŽ® ROMs/PKGs</a></li>
+    </ul>
+  </nav>
+
+  <!-- HERO -->
+  <section class="hero">
+    <div class="hero-bg"></div>
+    <div class="hero-grid"></div>
+    <div class="particles" id="particles"></div>
+    <div class="hero-content">
+      <div class="badge">ðŸ”“ GuÃ­a Completa 2024â€“2025</div>
+      <h1>
+        Libera tu<br/>
+        <span class="gradient">PlayStation</span>
+      </h1>
+      <p class="hero-sub">
+        GuÃ­a paso a paso para hacer jailbreak a tu PS4 y PS5.<br/>
+        Homebrew, backups, emuladores y mucho mÃ¡s â€” todo con seguridad.
+      </p>
+      <div class="hero-ctas">
+        <a href="#guia" class="btn-primary">ðŸš€ Comenzar GuÃ­a</a>
+        <a href="#compat" class="btn-secondary">ðŸ” Verificar Compatibilidad</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- WARNING -->
+  <div class="warning-section">
+    <div class="warning-card">
+      <div class="warning-icon">âš ï¸</div>
+      <div>
+        <h3>Aviso Legal Importante</h3>
+        <p>
+          Esta guÃ­a es solo para fines educativos e informativos. Hacer jailbreak puede <strong>anular la garantÃ­a</strong> de tu consola,
+          violar los <strong>TÃ©rminos de Servicio de Sony</strong> y resultar en el <strong>ban de tu cuenta PSN</strong>.
+          No uses el jailbreak para piraterÃ­a de software. El autor no se responsabiliza por daÃ±os a tu consola o cuenta.
+          Procede Ãºnicamente con hardware de tu propiedad y bajo tu propia responsabilidad.
+        </p>
+      </div>
+    </div>
+  </div>
+
+  <!-- CONSOLES -->
+  <section id="consoles" class="consoles-section">
+    <div style="text-align:center">
+      <div class="section-label">Elige tu consola</div>
+      <h2 class="section-title">Â¿QuÃ© PlayStation tienes?</h2>
+      <p class="section-sub" style="margin-inline:auto">Selecciona tu modelo para ver los pasos especÃ­ficos para tu consola.</p>
+    </div>
+    <div class="consoles-grid">
+
+      <div class="console-card ps4 active" id="card-ps4" onclick="selectConsole('ps4')">
+        <div class="console-emoji">ðŸ•¹ï¸</div>
+        <div class="console-name">PlayStation 4</div>
+        <div class="console-fw">Firmware â‰¤ 11.00</div>
+        <div class="console-tags">
+          <span class="tag tag-green">âœ… Jailbreak disponible</span>
+          <span class="tag tag-blue">Homebrew</span>
+          <span class="tag tag-blue">Backups</span>
+          <span class="tag tag-blue">Emuladores</span>
+        </div>
+      </div>
+
+      <div class="console-card ps5" id="card-ps5" onclick="selectConsole('ps5')">
+        <div class="console-emoji">ðŸŽ®</div>
+        <div class="console-name">PlayStation 5</div>
+        <div class="console-fw">Firmware â‰¤ 9.00 (limitado)</div>
+        <div class="console-tags">
+          <span class="tag tag-yellow">âš¡ Parcial / Experimental</span>
+          <span class="tag tag-blue">PS4 Homebrew</span>
+          <span class="tag tag-yellow">En desarrollo</span>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- GUIDE SECTION -->
+  <section id="guia" style="padding: 2rem 1rem 6rem;">
+    <div class="steps-header">
+      <div class="section-label">Proceso completo</div>
+      <h2 class="section-title">GuÃ­a Paso a Paso</h2>
+    </div>
+
+    <!-- Tabs -->
+    <div class="tabs">
+      <button class="tab-btn active" id="tab-ps4" onclick="switchTab('ps4')">ðŸ•¹ï¸ PS4</button>
+      <button class="tab-btn" id="tab-ps5" onclick="switchTab('ps5')">ðŸŽ® PS5</button>
+    </div>
+
+    <!-- PS4 GUIDE -->
+    <div class="guide-content active" id="guide-ps4">
+      <div class="steps-section">
+
+        <!-- STEP 1 -->
+        <div class="step-card" id="step1">
+          <div class="step-number-col">
+            <div class="step-number blue">1</div>
+            <div class="step-line"></div>
+          </div>
+          <div class="step-body">
+            <div class="step-title">ðŸ” Verifica tu versiÃ³n de firmware</div>
+            <p class="step-desc">
+              Antes de hacer cualquier cosa, necesitas saber exactamente quÃ© versiÃ³n de firmware tiene tu PS4.
+              El jailbreak solo funciona en versiones especÃ­ficas â€” si ya actualizaste a la Ãºltima versiÃ³n, no podrÃ¡s hacerlo.
+            </p>
+            <ul class="step-items">
+              <li>Enciende tu PS4 y ve a <strong>Ajustes</strong></li>
+              <li>Navega a <strong>Sistema &gt; InformaciÃ³n del sistema</strong></li>
+              <li>Anota la <strong>VersiÃ³n del sistema</strong> (ej: 9.00, 10.01, 11.00)</li>
+              <li>Versiones compatibles: <strong>â‰¤ 11.00</strong> â€” si tienes 11.50 o superior, espera un nuevo exploit</li>
+            </ul>
+            <div class="step-note">
+              <span class="step-note-icon">ðŸ’¡</span>
+              <span>Si tu consola estÃ¡ conectada a internet, <strong>desconÃ©ctala AHORA</strong> para evitar actualizaciones automÃ¡ticas.</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- STEP 2 -->
+        <div class="step-card" id="step2">
+          <div class="step-number-col">
+            <div class="step-number purple">2</div>
+            <div class="step-line"></div>
+          </div>
+          <div class="step-body">
+            <div class="step-title">ðŸŒ Prepara tu red â€” Modo Offline</div>
+            <p class="step-desc">
+              Es fundamental desconectar tu PS4 de internet para evitar actualizaciones no deseadas que parcheen la vulnerabilidad.
+            </p>
+            <ul class="step-items">
+              <li>Ve a <strong>Ajustes &gt; Red &gt; ConfiguraciÃ³n de red</strong></li>
+              <li>Desconecta el cable Ethernet y/o desactiva el WiFi</li>
+              <li>Opcionalmente, configura un DNS falso: <strong>DNS Primario: 192.168.1.99</strong></li>
+              <li>Desactiva <strong>ConexiÃ³n a Internet</strong> por completo</li>
+            </ul>
+          </div>
+        </div>
+
+        <!-- STEP 3 -->
+        <div class="step-card" id="step3">
+          <div class="step-number-col">
+            <div class="step-number cyan">3</div>
+            <div class="step-line"></div>
+          </div>
+          <div class="step-body">
+            <div class="step-title">ðŸ’¾ Prepara un USB drive (FAT32)</div>
+            <p class="step-desc">
+              NecesitarÃ¡s una memoria USB formateada en FAT32 para transferir los archivos del exploit y los juegos homebrew.
+            </p>
+            <ul class="step-items">
+              <li>Consigue una USB de al menos <strong>16 GB</strong> (recomendado 64 GB+)</li>
+              <li>Formatea en <strong>FAT32</strong> con tamaÃ±o de unidad 32 KB o 64 KB</li>
+              <li>En Windows: usa <strong>Rufus</strong> o el comando diskpart para FAT32 en unidades grandes</li>
+              <li>En Mac: usa Disk Utility con formato MS-DOS (FAT)</li>
+            </ul>
+            <div class="code-block">diskpart &gt; format fs=fat32 quick label="PS4-JB"</div>
+            <div class="step-note">
+              <span class="step-note-icon">âš ï¸</span>
+              <span>El formateo borrarÃ¡ todo en la USB. Haz un respaldo antes.</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- STEP 4 -->
+        <div class="step-card" id="step4">
+          <div class="step-number-col">
+            <div class="step-number green">4</div>
+            <div class="step-line"></div>
+          </div>
+          <div class="step-body">
+            <div class="step-title">ðŸ“¥ Descarga el Exploit GoldHEN / PPPwn</div>
+            <p class="step-desc">
+              Existen varios exploits segÃºn la versiÃ³n de tu firmware. Los mÃ¡s populares y estables son <strong>GoldHEN</strong> (para fw â‰¤ 9.00) y <strong>PPPwn</strong> (para fw hasta 11.00).
+            </p>
+            <ul class="step-items">
+              <li><strong>PPPwn</strong> â€” Exploit a travÃ©s de PPPoE, compatible hasta FW 11.00</li>
+              <li><strong>GoldHEN 2.4b</strong> â€” Homebrew Enabler, instalado despuÃ©s del exploit</li>
+              <li><strong>mira-toolchain</strong> â€” Para compilar homebrews personalizados</li>
+              <li>Descarga siempre de fuentes oficiales como <strong>GitHub</strong></li>
+            </ul>
+            <div class="step-note">
+              <span class="step-note-icon">ðŸ”—</span>
+              <span>Busca "PPPwn github" y "GoldHEN github" â€” verifica que el autor sea conocido en la comunidad PS4dev.</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- STEP 5 -->
+        <div class="step-card" id="step5">
+          <div class="step-number-col">
+            <div class="step-number pink">5</div>
+            <div class="step-line"></div>
+          </div>
+          <div class="step-body">
+            <div class="step-title">ðŸ”Œ Ejecuta el Exploit PPPwn</div>
+            <p class="step-desc">
+              PPPwn es un exploit de kernel que se ejecuta desde tu PC/Mac/Raspberry Pi mediante un cable Ethernet conectado a la PS4.
+            </p>
+            <ul class="step-items">
+              <li>Instala Python 3.x en tu PC: <code>sudo apt install python3</code></li>
+              <li>Clona PPPwn: <code>git clone https://github.com/TheOfficialFloW/PPPwn</code></li>
+              <li>Conecta tu PC y PS4 mediante cable Ethernet</li>
+              <li>En PS4: <strong>Ajustes &gt; Red &gt; Configurar conexiÃ³n de internet &gt; Usar cable LAN &gt; PPPoE</strong></li>
+              <li>Usuario: <code>user</code>, ContraseÃ±a: <code>pass</code></li>
+              <li>Ejecuta el script desde tu PC</li>
+            </ul>
+            <div class="code-block">python3 pppwn.py --interface eth0 --fw 1100</div>
+            <div class="step-note">
+              <span class="step-note-icon">â±ï¸</span>
+              <span>El exploit puede tardar entre 1â€“5 minutos. Si falla, vuelve a intentarlo â€” es normal que requiera varios intentos.</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- STEP 6 -->
+        <div class="step-card" id="step6">
+          <div class="step-number-col">
+            <div class="step-number orange">6</div>
+            <div class="step-line"></div>
+          </div>
+          <div class="step-body">
+            <div class="step-title">ðŸ  Instala GoldHEN (Homebrew Enabler)</div>
+            <p class="step-desc">
+              Una vez que el exploit de kernel haya funcionado, debes instalar GoldHEN para habilitar el entorno homebrew de forma persistente en cada reinicio.
+            </p>
+            <ul class="step-items">
+              <li>Descarga el archivo <strong>GoldHEN.bin</strong> desde el repositorio oficial</li>
+              <li>Copia el archivo a tu USB formateada en FAT32, en la raÃ­z</li>
+              <li>Conecta la USB a tu PS4 <strong>antes de ejecutar el exploit</strong></li>
+              <li>Tras el exploit exitoso, GoldHEN se cargarÃ¡ automÃ¡ticamente desde la USB</li>
+              <li>VerÃ¡s el logo de GoldHEN y notificaciones en la esquina</li>
+            </ul>
+            <div class="step-note">
+              <span class="step-note-icon">ðŸ”„</span>
+              <span>GoldHEN se pierde al apagar la consola. Debes re-ejecutar el exploit cada vez que reinicies la PS4.</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- STEP 7 -->
+        <div class="step-card" id="step7">
+          <div class="step-number-col">
+            <div class="step-number blue">7</div>
+            <div class="step-line"></div>
+          </div>
+          <div class="step-body">
+            <div class="step-title">ðŸ“¦ Instala el Package Manager (HEN Store)</div>
+            <p class="step-desc">
+              Con GoldHEN activo, puedes instalar paquetes PKG (aplicaciones homebrew). Instala un gestor de paquetes para facilitar la instalaciÃ³n de apps.
+            </p>
+            <ul class="step-items">
+              <li>Descarga <strong>HEN Store</strong> o <strong>PS4 Homebrew Store</strong> en formato .pkg</li>
+              <li>CÃ³pialo a la USB</li>
+              <li>En la PS4 con GoldHEN activo: ve a <strong>Debug Settings &gt; Package Installer</strong></li>
+              <li>Selecciona el .pkg de tu USB e instÃ¡lalo</li>
+              <li>Ahora tendrÃ¡s acceso a cientos de homebrews gratuitos</li>
+            </ul>
+          </div>
+        </div>
+
+        <!-- STEP 8 -->
+        <div class="step-card" id="step8">
+          <div class="step-number-col">
+            <div class="step-number purple">8</div>
+          </div>
+          <div class="step-body">
+            <div class="step-title">ðŸŽ‰ Â¡Disfruta el Homebrew!</div>
+            <p class="step-desc">
+              Con tu PS4 jailbreakeada y GoldHEN instalado, ahora tienes acceso a un mundo de posibilidades legÃ­timas.
+            </p>
+            <ul class="step-items">
+              <li>ðŸ•¹ï¸ <strong>Emuladores</strong> â€” RetroArch, PPSSPP, Dolphin y mÃ¡s</li>
+              <li>ðŸŽ¬ <strong>Media Players</strong> â€” Reproduce videos en formatos no soportados</li>
+              <li>ðŸ› ï¸ <strong>Cheats y Mods</strong> â€” Modifica tus juegos favoritos</li>
+              <li>ðŸ’¾ <strong>Backups</strong> â€” Crea y restaura backups de tus propios juegos fÃ­sicos</li>
+              <li>ðŸ–¥ï¸ <strong>Remote Play</strong> â€” Mejoras de calidad y opciones avanzadas</li>
+              <li>ðŸŽ® <strong>Game Mods</strong> â€” Instala mods para tus juegos</li>
+            </ul>
+            <div class="step-note">
+              <span class="step-note-icon">ðŸ›¡ï¸</span>
+              <span>MantÃ©n tu consola <strong>offline</strong> siempre que tengas GoldHEN activo para evitar el ban de PSN.</span>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- PS5 GUIDE -->
+    <div class="guide-content" id="guide-ps5">
+      <div class="steps-section">
+
+        <div class="step-card" id="ps5-step1" style="opacity:1;transform:none">
+          <div class="step-number-col">
+            <div class="step-number blue">1</div>
+            <div class="step-line"></div>
+          </div>
+          <div class="step-body">
+            <div class="step-title">âš¡ Estado del PS5 Jailbreak (2024-2025)</div>
+            <p class="step-desc">
+              El jailbreak de PS5 estÃ¡ en fase experimental. Actualmente solo hay exploits disponibles para firmware <strong>â‰¤ 9.00</strong>,
+              y ejecutan cÃ³digo PS4 (modo de compatibilidad) â€” no cÃ³digo PS5 nativo.
+            </p>
+            <ul class="step-items">
+              <li>Firmware â‰¤ 4.03: Exploit de WebKit disponible (muy antiguo)</li>
+              <li>Firmware â‰¤ 9.00: Exploits de kernel disponibles con limitaciones</li>
+              <li>Sin ejecutar juegos PS5 en modo homebrew completo aÃºn</li>
+              <li>Se recomienda solo a usuarios avanzados</li>
+            </ul>
+            <div class="step-note">
+              <span class="step-note-icon">âš ï¸</span>
+              <span>Si tu PS5 tiene firmware superior a 9.00, no hay exploit disponible. MantÃ©n la consola offline y espera.</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="step-card" style="opacity:1;transform:none">
+          <div class="step-number-col">
+            <div class="step-number purple">2</div>
+            <div class="step-line"></div>
+          </div>
+          <div class="step-body">
+            <div class="step-title">ðŸ”’ MantÃ©n el firmware bajo â€” Modo aviÃ³n</div>
+            <p class="step-desc">Lo mÃ¡s importante si tienes una PS5 con firmware bajo es NO actualizar. Sigue estos pasos para protegerte.</p>
+            <ul class="step-items">
+              <li>Desconecta la PS5 de internet <strong>inmediatamente</strong></li>
+              <li>Ve a <strong>Ajustes &gt; Red &gt; ConfiguraciÃ³n de red &gt; No conectar a internet</strong></li>
+              <li>Desmarca las actualizaciones automÃ¡ticas en <strong>Ajustes del sistema</strong></li>
+              <li>Nunca insertes un disco que requiera actualizaciÃ³n de firmware</li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="step-card" style="opacity:1;transform:none">
+          <div class="step-number-col">
+            <div class="step-number cyan">3</div>
+            <div class="step-line"></div>
+          </div>
+          <div class="step-body">
+            <div class="step-title">ðŸŒ Exploit via WebKit (FW â‰¤ 9.00)</div>
+            <p class="step-desc">El exploit actual para PS5 usa el navegador web interno de la consola para ganar acceso inicial.</p>
+            <ul class="step-items">
+              <li>Configura un servidor web local en tu PC con el exploit</li>
+              <li>Conecta la PS5 a tu red local (WiFi o cable)</li>
+              <li>Abre el navegador web en la PS5 (desde el botÃ³n de bÃºsqueda)</li>
+              <li>Navega a la IP de tu servidor: <code>http://192.168.x.x:8080</code></li>
+              <li>El exploit se cargarÃ¡ automÃ¡ticamente</li>
+            </ul>
+            <div class="code-block">python3 -m http.server 8080</div>
+          </div>
+        </div>
+
+        <div class="step-card" style="opacity:1;transform:none">
+          <div class="step-number-col">
+            <div class="step-number green">4</div>
+            <div class="step-line"></div>
+          </div>
+          <div class="step-body">
+            <div class="step-title">ðŸ•¹ï¸ Homebrew de PS4 en PS5</div>
+            <p class="step-desc">Con el exploit activo, puedes ejecutar aplicaciones homebrew de PS4 usando el modo de compatibilidad de PS5.</p>
+            <ul class="step-items">
+              <li>Instala el <strong>PS4 Homebrew Store PKG</strong> mediante USB</li>
+              <li>Accede a travÃ©s del modo de compatibilidad con PS4</li>
+              <li>Emuladores de retro gaming funcionan bien</li>
+              <li>Algunas apps nativas de PS4 tambiÃ©n son compatibles</li>
+            </ul>
+            <div class="step-note">
+              <span class="step-note-icon">ðŸ”¬</span>
+              <span>El jailbreak de PS5 estÃ¡ en desarrollo activo. Sigue a la comunidad en <strong>wololo.net</strong> y <strong>reddit.com/r/ps5homebrew</strong> para novedades.</span>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- TOOLS SECTION -->
+  <section id="herramientas" class="tools-section">
+    <div class="tools-inner">
+      <div class="section-label">Recursos Esenciales</div>
+      <h2 class="section-title">Herramientas Necesarias</h2>
+      <p class="section-sub">Software y recursos que necesitarÃ¡s durante el proceso de jailbreak.</p>
+      <div class="tools-grid">
+
+        <div class="tool-card">
+          <div class="tool-icon">ðŸ</div>
+          <div class="tool-name">PPPwn</div>
+          <div class="tool-desc">Exploit principal para PS4 firmware hasta 11.00. Requiere Python 3 y cable Ethernet.</div>
+          <a class="tool-link" href="https://github.com/TheOfficialFloW/PPPwn" target="_blank">GitHub â†—</a>
+        </div>
+
+        <div class="tool-card">
+          <div class="tool-icon">ðŸ </div>
+          <div class="tool-name">GoldHEN 2.4b</div>
+          <div class="tool-desc">Homebrew Enabler para PS4. Carga el entorno homebrew tras el exploit de kernel.</div>
+          <a class="tool-link" href="https://github.com/GoldHEN/GoldHEN" target="_blank">GitHub â†—</a>
+        </div>
+
+        <div class="tool-card">
+          <div class="tool-icon">ðŸ“¦</div>
+          <div class="tool-name">PS Homebrew Store</div>
+          <div class="tool-desc">Tienda de homebrews gratuitos: emuladores, herramientas, apps y mods.</div>
+          <a class="tool-link" href="https://github.com/LightningMods/PS4-Store" target="_blank">GitHub â†—</a>
+        </div>
+
+        <div class="tool-card">
+          <div class="tool-icon">ðŸ’¾</div>
+          <div class="tool-name">Rufus</div>
+          <div class="tool-desc">Herramienta para formatear USB en FAT32 correctamente en Windows.</div>
+          <a class="tool-link" href="https://rufus.ie" target="_blank">rufus.ie â†—</a>
+        </div>
+
+        <div class="tool-card">
+          <div class="tool-icon">ðŸŽ®</div>
+          <div class="tool-name">RetroArch PS4</div>
+          <div class="tool-desc">Frontend de emulaciÃ³n masivo para PS4 homebrew. Soporta SNES, N64, PS1, GBA y mÃ¡s.</div>
+          <a class="tool-link" href="https://www.retroarch.com" target="_blank">retroarch.com â†—</a>
+        </div>
+
+        <div class="tool-card">
+          <div class="tool-icon">ðŸ”§</div>
+          <div class="tool-name">PS4 PKG Tool</div>
+          <div class="tool-desc">Herramienta para crear y manipular paquetes PKG de PS4 para instalar en tu consola.</div>
+          <a class="tool-link" href="https://github.com/nicoboss/ps4-pkg-tool" target="_blank">GitHub â†—</a>
+        </div>
+
+        <div class="tool-card">
+          <div class="tool-icon">ðŸŒ</div>
+          <div class="tool-name">wololo.net</div>
+          <div class="tool-desc">La comunidad referencia para noticias sobre exploits de PlayStation y consolas de juego.</div>
+          <a class="tool-link" href="https://wololo.net" target="_blank">wololo.net â†—</a>
+        </div>
+
+        <div class="tool-card">
+          <div class="tool-icon">ðŸŽ¯</div>
+          <div class="tool-name">OpenOrbis SDK</div>
+          <div class="tool-desc">Kit de desarrollo oficial de la comunidad para crear tus propias aplicaciones PS4.</div>
+          <a class="tool-link" href="https://github.com/OpenOrbis/OpenOrbis-PS4-Toolchain" target="_blank">GitHub â†—</a>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- COMPATIBILITY TABLE -->
+  <section id="compat" class="compat-section">
+    <div class="section-label">Estado de compatibilidad</div>
+    <h2 class="section-title">Â¿Funciona en mi firmware?</h2>
+    <p class="section-sub">Tabla actualizada de versiones de firmware y compatibilidad con exploits.</p>
+    <div class="mt-2" style="background:var(--bg-card); border:1px solid var(--border); border-radius:20px; overflow:hidden; margin-top:2rem;">
+      <table>
+        <thead>
+          <tr>
+            <th>Consola</th>
+            <th>Firmware</th>
+            <th>Estado</th>
+            <th>Exploit</th>
+            <th>Nivel</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>PS4</td>
+            <td>â‰¤ 9.00</td>
+            <td><span class="status-dot"><span class="dot dot-green"></span>Totalmente compatible</span></td>
+            <td>PPPwn + GoldHEN</td>
+            <td>Principiante</td>
+          </tr>
+          <tr>
+            <td>PS4</td>
+            <td>9.01 â€“ 10.01</td>
+            <td><span class="status-dot"><span class="dot dot-green"></span>Compatible</span></td>
+            <td>PPPwn + GoldHEN</td>
+            <td>Principiante</td>
+          </tr>
+          <tr>
+            <td>PS4</td>
+            <td>10.50 â€“ 11.00</td>
+            <td><span class="status-dot"><span class="dot dot-yellow"></span>Compatible (beta)</span></td>
+            <td>PPPwn modificado</td>
+            <td>Intermedio</td>
+          </tr>
+          <tr>
+            <td>PS4</td>
+            <td>â‰¥ 11.50</td>
+            <td><span class="status-dot"><span class="dot dot-red"></span>No compatible</span></td>
+            <td>Sin exploit disponible</td>
+            <td>â€”</td>
+          </tr>
+          <tr>
+            <td>PS5</td>
+            <td>â‰¤ 4.03</td>
+            <td><span class="status-dot"><span class="dot dot-yellow"></span>Experimental</span></td>
+            <td>WebKit exploit</td>
+            <td>Avanzado</td>
+          </tr>
+          <tr>
+            <td>PS5</td>
+            <td>4.50 â€“ 9.00</td>
+            <td><span class="status-dot"><span class="dot dot-yellow"></span>Experimental</span></td>
+            <td>Kernel exploit</td>
+            <td>Avanzado</td>
+          </tr>
+          <tr>
+            <td>PS5</td>
+            <td>â‰¥ 9.61</td>
+            <td><span class="status-dot"><span class="dot dot-red"></span>No compatible</span></td>
+            <td>Sin exploit disponible</td>
+            <td>â€”</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- FAQ -->
+  <section id="faq" class="faq-section">
+    <div class="section-label" style="text-align:center">Preguntas frecuentes</div>
+    <h2 class="section-title center">FAQ</h2>
+    <div style="margin-top:2.5rem">
+
+      <div class="faq-item" id="faq1">
+        <button class="faq-q" onclick="toggleFaq('faq1')">
+          Â¿El jailbreak puede romper mi PlayStation?
+          <span class="faq-arrow">â–¼</span>
+        </button>
+        <div class="faq-a">
+          <div class="faq-a-inner">
+            Si sigues los pasos correctamente, el riesgo de daÃ±ar fÃ­sicamente la consola es muy bajo. Sin embargo, siempre existe el riesgo de un "brick" (consola daÃ±ada irreparablemente) si algo sale muy mal. El mayor riesgo es el ban de PSN si te conectas online con el jailbreak activo.
+          </div>
+        </div>
+      </div>
+
+      <div class="faq-item" id="faq2">
+        <button class="faq-q" onclick="toggleFaq('faq2')">
+          Â¿Pierdo el acceso a PlayStation Network?
+          <span class="faq-arrow">â–¼</span>
+        </button>
+        <div class="faq-a">
+          <div class="faq-a-inner">
+            Si te conectas a PSN con el jailbreak activo, Sony puede detectarlo y banear tu cuenta permanentemente. La soluciÃ³n es mantener la consola completamente offline cuando tengas el jailbreak activo, o usar una cuenta alternativa desechable. Muchos usuarios tienen dos "modos": jailbreak offline y modo normal online.
+          </div>
+        </div>
+      </div>
+
+      <div class="faq-item" id="faq3">
+        <button class="faq-q" onclick="toggleFaq('faq3')">
+          Â¿El jailbreak es permanente?
+          <span class="faq-arrow">â–¼</span>
+        </button>
+        <div class="faq-a">
+          <div class="faq-a-inner">
+            Para PS4, el jailbreak con GoldHEN NO es permanente â€” se pierde cada vez que apagas la consola. Debes re-ejecutar el exploit PPPwn cada vez que reinicies. Sin embargo, las aplicaciones instaladas permanecen en el disco. El proceso de re-jailbreak toma 1-3 minutos.
+          </div>
+        </div>
+      </div>
+
+      <div class="faq-item" id="faq4">
+        <button class="faq-q" onclick="toggleFaq('faq4')">
+          Â¿Necesito conocimientos de programaciÃ³n?
+          <span class="faq-arrow">â–¼</span>
+        </button>
+        <div class="faq-a">
+          <div class="faq-a-inner">
+            No necesitas ser programador. El proceso bÃ¡sico requiere seguir los pasos, ejecutar comandos de Python simples y copiar archivos. Si puedes seguir instrucciones y no tienes miedo de la terminal/sÃ­mbolo del sistema, puedes hacerlo.
+          </div>
+        </div>
+      </div>
+
+      <div class="faq-item" id="faq5">
+        <button class="faq-q" onclick="toggleFaq('faq5')">
+          Â¿CuÃ¡l es la diferencia entre jailbreak y CFW?
+          <span class="faq-arrow">â–¼</span>
+        </button>
+        <div class="faq-a">
+          <div class="faq-a-inner">
+            Un <strong>jailbreak</strong> explota una vulnerabilidad del software para ganar acceso privilegiado al sistema. Un <strong>CFW (Custom Firmware)</strong> es un firmware completamente modificado que reemplaza el original. Para PS4, lo que existe es un jailbreak con homebrew enabler (GoldHEN), no un CFW real como el que existÃ­a en PS3.
+          </div>
+        </div>
+      </div>
+
+      <div class="faq-item" id="faq6">
+        <button class="faq-q" onclick="toggleFaq('faq6')">
+          Â¿QuÃ© pasa si ya actualicÃ© al firmware mÃ¡s nuevo?
+          <span class="faq-arrow">â–¼</span>
+        </button>
+        <div class="faq-a">
+          <div class="faq-a-inner">
+            Desafortunadamente, no hay forma de hacer downgrade de firmware en PS4/PS5. Si ya actualizaste a una versiÃ³n no compatible, deberÃ¡s esperar a que la comunidad desarrolle un exploit para esa versiÃ³n, lo cual puede tomar meses o aÃ±os, o puede que nunca ocurra.
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• -->
+  <!-- ROMS / GAMES LIBRARY SECTION                          -->
+  <!-- â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• -->
+  <section id="roms" class="roms-section">
+    <div class="roms-inner">
+      <div class="section-label">Biblioteca de Juegos</div>
+      <h2 class="section-title">ROMs &amp; PKGs Disponibles</h2>
+      <p class="section-sub">
+        Juegos disponibles en la comunidad homebrew como archivos PKG.
+        Usa los filtros para encontrar lo que buscas. Solo para uso con juegos de tu propiedad.
+      </p>
+
+      <!-- Platform tabs -->
+      <div class="platform-tabs" style="margin-top:2rem">
+        <button class="plat-btn active" id="plat-all" onclick="setPlatform('all')">Todos</button>
+        <button class="plat-btn" id="plat-ps5" onclick="setPlatform('ps5')">ðŸŽ® PS5</button>
+        <button class="plat-btn" id="plat-ps4" onclick="setPlatform('ps4')">ðŸ•¹ï¸ PS4</button>
+      </div>
+
+      <!-- Search -->
+      <div class="search-bar-wrap">
+        <span class="search-icon">ðŸ”</span>
+        <input type="text" id="gameSearch" placeholder="Buscar juego... (ej: Spider-Man, God of War, FIFA)" oninput="filterGames()" />
+      </div>
+
+      <!-- Genre filters -->
+      <div class="filter-row" id="genreFilters">
+        <button class="filter-btn active" onclick="setGenre('all',this)">Todos los gÃ©neros</button>
+        <button class="filter-btn" onclick="setGenre('accion',this)">âš”ï¸ AcciÃ³n</button>
+        <button class="filter-btn" onclick="setGenre('aventura',this)">ðŸ—ºï¸ Aventura</button>
+        <button class="filter-btn" onclick="setGenre('deportes',this)">âš½ Deportes</button>
+        <button class="filter-btn" onclick="setGenre('rpg',this)">ðŸ‰ RPG</button>
+        <button class="filter-btn" onclick="setGenre('fps',this)">ðŸ”« FPS</button>
+        <button class="filter-btn" onclick="setGenre('carreras',this)">ðŸŽï¸ Carreras</button>
+        <button class="filter-btn" onclick="setGenre('horror',this)">ðŸ‘» Horror</button>
+        <button class="filter-btn" onclick="setGenre('lucha',this)">ðŸ¥Š Lucha</button>
+        <button class="filter-btn" onclick="setGenre('estrategia',this)">â™Ÿï¸ Estrategia</button>
+      </div>
+
+      <!-- Stats -->
+      <div class="games-stats">Mostrando <span id="gamesCount">0</span> juegos</div>
+
+      <!-- Games Grid -->
+      <div class="games-grid" id="gamesGrid"></div>
+
+      <!-- WHERE TO FIND -->
+      <div style="margin-top:4rem">
+        <div class="section-label">DÃ³nde encontrarlos</div>
+        <h3 class="section-title" style="font-size:1.8rem">Comunidades y Repositorios</h3>
+        <p class="section-sub">Estos son los sitios mÃ¡s usados por la comunidad homebrew para compartir y encontrar PKGs.</p>
+        <div class="sites-grid">
+
+          <a class="site-card" href="https://nopaystation.com" target="_blank">
+            <div class="site-icon">ðŸ›¸</div>
+            <div class="site-name">NoPayStation</div>
+            <div class="site-desc">Base de datos histÃ³rica de paquetes de PlayStation. PKGs de PS3, PS4 y Vita con enlaces directos desde los servidores de Sony.</div>
+            <div class="site-url">nopaystation.com</div>
+          </a>
+
+          <a class="site-card" href="https://www.reddit.com/r/ps4homebrew" target="_blank">
+            <div class="site-icon">ðŸ¤–</div>
+            <div class="site-name">r/ps4homebrew</div>
+            <div class="site-desc">La subreddit mÃ¡s activa para homebrew de PS4. Noticias, guÃ­as, releases de PKGs y soporte de la comunidad.</div>
+            <div class="site-url">reddit.com/r/ps4homebrew</div>
+          </a>
+
+          <a class="site-card" href="https://www.reddit.com/r/ps5homebrew" target="_blank">
+            <div class="site-icon">ðŸŽ®</div>
+            <div class="site-name">r/ps5homebrew</div>
+            <div class="site-desc">Comunidad de desarrollo homebrew para PS5. Noticias sobre exploits, PKGs y herramientas en desarrollo.</div>
+            <div class="site-url">reddit.com/r/ps5homebrew</div>
+          </a>
+
+          <a class="site-card" href="https://wololo.net" target="_blank">
+            <div class="site-icon">ðŸ“¡</div>
+            <div class="site-name">Wololo.net</div>
+            <div class="site-desc">El medio de referencia para noticias de exploits en PlayStation, PSP, Vita y Switch. Siempre actualizado con los Ãºltimos lanzamientos.</div>
+            <div class="site-url">wololo.net</div>
+          </a>
+
+          <a class="site-card" href="https://www.psx-place.com" target="_blank">
+            <div class="site-icon">ðŸ </div>
+            <div class="site-name">PSX-Place</div>
+            <div class="site-desc">Foro y comunidad homebrew para todas las consolas PlayStation. Releases, tutoriales y desarrollo activo.</div>
+            <div class="site-url">psx-place.com</div>
+          </a>
+
+          <a class="site-card" href="https://github.com/GoldHEN" target="_blank">
+            <div class="site-icon">â­</div>
+            <div class="site-name">GoldHEN GitHub</div>
+            <div class="site-desc">Repositorio oficial de GoldHEN. EncontrarÃ¡s plugins, herramientas y la lista de homebrews compatibles.</div>
+            <div class="site-url">github.com/GoldHEN</div>
+          </a>
+
+        </div>
+      </div>
+
+      <!-- PKG Install guide -->
+      <div style="margin-top:3rem; background:var(--bg-card); border:1px solid var(--border); border-radius:20px; padding:2rem;">
+        <div style="font-size:1.1rem;font-weight:700;margin-bottom:1rem">ðŸ“¦ Â¿CÃ³mo instalar un PKG?</div>
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:1rem">
+          <div style="background:var(--bg-card2);border-radius:12px;padding:1rem;border:1px solid var(--border)">
+            <div style="font-size:1.5rem;margin-bottom:0.5rem">1ï¸âƒ£</div>
+            <div style="font-weight:600;font-size:0.9rem;margin-bottom:0.3rem">Descarga el PKG</div>
+            <div style="font-size:0.82rem;color:var(--text-secondary)">Guarda el archivo .pkg en tu USB formateada en FAT32 o exFAT</div>
+          </div>
+          <div style="background:var(--bg-card2);border-radius:12px;padding:1rem;border:1px solid var(--border)">
+            <div style="font-size:1.5rem;margin-bottom:0.5rem">2ï¸âƒ£</div>
+            <div style="font-weight:600;font-size:0.9rem;margin-bottom:0.3rem">Activa GoldHEN</div>
+            <div style="font-size:0.82rem;color:var(--text-secondary)">Ejecuta el exploit PPPwn y carga GoldHEN en tu PS4/PS5</div>
+          </div>
+          <div style="background:var(--bg-card2);border-radius:12px;padding:1rem;border:1px solid var(--border)">
+            <div style="font-size:1.5rem;margin-bottom:0.5rem">3ï¸âƒ£</div>
+            <div style="font-weight:600;font-size:0.9rem;margin-bottom:0.3rem">Package Installer</div>
+            <div style="font-size:0.82rem;color:var(--text-secondary)">Ve a Debug Settings â†’ Package Installer â†’ selecciona tu USB</div>
+          </div>
+          <div style="background:var(--bg-card2);border-radius:12px;padding:1rem;border:1px solid var(--border)">
+            <div style="font-size:1.5rem;margin-bottom:0.5rem">4ï¸âƒ£</div>
+            <div style="font-weight:600;font-size:0.9rem;margin-bottom:0.3rem">Â¡Juega!</div>
+            <div style="font-size:0.82rem;color:var(--text-secondary)">El juego aparece en tu biblioteca. LÃ¡nzalo como cualquier otro juego</div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- FOOTER -->
+  <footer>
+    <div style="font-size:2rem;margin-bottom:1rem">ðŸŽ®</div>
+    <div style="font-weight:700;font-size:1.1rem;margin-bottom:0.5rem;color:var(--text-primary)">PS Jailbreak Lab</div>
+    <div>Esta guÃ­a es Ãºnicamente con fines educativos e informativos.</div>
+    <div>Respeta las leyes de tu paÃ­s y los TÃ©rminos de Servicio de Sony.</div>
+    <div style="margin-top:1rem">
+      Comunidad: <a href="https://wololo.net" target="_blank">wololo.net</a> Â· 
+      <a href="https://reddit.com/r/ps4homebrew" target="_blank">r/ps4homebrew</a> Â· 
+      <a href="https://reddit.com/r/ps5homebrew" target="_blank">r/ps5homebrew</a>
+    </div>
+    <div style="margin-top:1rem;font-size:0.78rem">Â© 2025 PS Jailbreak Lab â€” Solo para propÃ³sitos educativos</div>
+  </footer>
+
+  <script>
+    // â”€â”€â”€ PROGRESS BAR â”€â”€â”€
+    window.addEventListener('scroll', () => {
+      const doc = document.documentElement;
+      const pct = (doc.scrollTop / (doc.scrollHeight - doc.clientHeight)) * 100;
+      document.getElementById('progressBar').style.width = pct + '%';
+    });
+
+    // â”€â”€â”€ PARTICLES â”€â”€â”€
+    const particlesEl = document.getElementById('particles');
+    const colors = ['rgba(45,108,255,0.4)', 'rgba(139,45,255,0.4)', 'rgba(0,229,255,0.3)', 'rgba(255,45,120,0.3)'];
+    for (let i = 0; i < 20; i++) {
+      const p = document.createElement('div');
+      p.className = 'particle';
+      const size = Math.random() * 4 + 2;
+      p.style.cssText = `
+        width: ${size}px; height: ${size}px;
+        left: ${Math.random() * 100}%;
+        background: ${colors[Math.floor(Math.random() * colors.length)]};
+        animation-duration: ${Math.random() * 15 + 8}s;
+        animation-delay: ${Math.random() * 10}s;
+        box-shadow: 0 0 ${size * 3}px ${colors[Math.floor(Math.random() * colors.length)]};
+      `;
+      particlesEl.appendChild(p);
+    }
+
+    // ——— INTERSECTION OBSERVER FOR STEPS ———
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(e => {
+        if (e.isIntersecting) e.target.classList.add('visible');
+      });
+    }, { threshold: 0.15 });
+    document.querySelectorAll('.step-card').forEach(el => observer.observe(el));
+
+    // ——— CONSOLE CARDS ———
+    function selectConsole(id) {
+      document.getElementById('card-ps4').classList.remove('active');
+      document.getElementById('card-ps5').classList.remove('active');
+      document.getElementById('card-' + id).classList.add('active');
+      switchTab(id);
+      document.getElementById('guia').scrollIntoView({ behavior: 'smooth' });
+    }
+
+    // ——— TABS ———
+    function switchTab(id) {
+      document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+      document.querySelectorAll('.guide-content').forEach(c => c.classList.remove('active'));
+      document.getElementById('tab-' + id).classList.add('active');
+      document.getElementById('guide-' + id).classList.add('active');
+    }
+
+    // ——— FAQ ———
+    function toggleFaq(id) {
+      const item = document.getElementById(id);
+      const wasOpen = item.classList.contains('open');
+      document.querySelectorAll('.faq-item').forEach(el => el.classList.remove('open'));
+      if (!wasOpen) item.classList.add('open');
+    }
+
+    // ——— SMOOTH LINKS ———
+    document.querySelectorAll('a[href^="#"]').forEach(a => {
+      a.addEventListener('click', e => {
+        e.preventDefault();
+        const target = document.querySelector(a.getAttribute('href'));
+        if (target) target.scrollIntoView({ behavior: 'smooth' });
+      });
+    });
+
+    const games = [
+      // ── PS5 / RECIENTES ──
+      { title: 'Spider-Man 2', genre: 'accion', platform: 'ps5', emoji: '🕷️', color: '#c0392b,#8e44ad', year: 2023, img: 'https://image.api.playstation.com/vulcan/ap/rnd/202306/0913/d24642d9bf3ccc37f07453f571d8473ad7ebea15bfb0a725.png' },
+      { title: 'God of War: Ragnarök', genre: 'accion', platform: 'both', emoji: '⚡', color: '#2c3e50,#c0392b', year: 2022, img: 'https://cdn.cloudflare.steamstatic.com/steam/apps/2322010/library_600x900.jpg' },
+      { title: "Demon's Souls Remake", genre: 'rpg', platform: 'ps5', emoji: '💀', color: '#1a1a2e,#8b0000', year: 2020, img: 'https://image.api.playstation.com/vulcan/ap/rnd/202009/1717/74hT6dG65F932g4H59218FjK.png' },
+      { title: 'Returnal', genre: 'accion', platform: 'ps5', emoji: '🔄', color: '#0f3460,#533483', year: 2021, img: 'https://cdn.cloudflare.steamstatic.com/steam/apps/1649240/library_600x900.jpg' },
+      { title: 'Ratchet & Clank: Rift Apart', genre: 'accion', platform: 'ps5', emoji: '🔧', color: '#e94560,#0f3460', year: 2021, img: 'https://cdn.cloudflare.steamstatic.com/steam/apps/1895880/library_600x900.jpg' },
+      { title: 'Horizon Forbidden West', genre: 'aventura', platform: 'both', emoji: '🏹', color: '#16213e,#0a6c3b', year: 2022, img: 'https://cdn.cloudflare.steamstatic.com/steam/apps/2420110/library_600x900.jpg' },
+      { title: 'Gran Turismo 7', genre: 'carreras', platform: 'both', emoji: '🏎️', color: '#1a1a2e,#e94560', year: 2022, img: 'https://image.api.playstation.com/vulcan/ap/rnd/202109/1317/H592G482g3827F38f.png' },
+      { title: 'The Last of Us Part I', genre: 'aventura', platform: 'ps5', emoji: '🍄', color: '#2d4a22,#5c4827', year: 2022, img: 'https://cdn.cloudflare.steamstatic.com/steam/apps/1888930/library_600x900.jpg' },
+      { title: 'Miles Morales', genre: 'accion', platform: 'both', emoji: '🕸️', color: '#8e44ad,#e74c3c', year: 2020, img: 'https://cdn.cloudflare.steamstatic.com/steam/apps/1817190/library_600x900.jpg' },
+      { title: 'Final Fantasy XVI', genre: 'rpg', platform: 'ps5', emoji: '🌙', color: '#1a1a2e,#16213e', year: 2023, img: 'https://cdn.cloudflare.steamstatic.com/steam/apps/2515020/library_600x900.jpg' },
+      { title: 'Hogwarts Legacy', genre: 'rpg', platform: 'both', emoji: '🧙', color: '#1a1a2e,#512e5f', year: 2023, img: 'https://cdn.cloudflare.steamstatic.com/steam/apps/990080/library_600x900.jpg' },
+      { title: 'Elden Ring', genre: 'rpg', platform: 'both', emoji: '💍', color: '#1a1500,#3a2a00', year: 2022, img: 'https://cdn.cloudflare.steamstatic.com/steam/apps/1245620/library_600x900.jpg' },
+      { title: "Baldur's Gate 3", genre: 'rpg', platform: 'ps5', emoji: '🎲', color: '#1a0a2a,#0a0a1a', year: 2023, img: 'https://cdn.cloudflare.steamstatic.com/steam/apps/1086940/library_600x900.jpg' },
+      { title: 'Star Wars Jedi: Survivor', genre: 'accion', platform: 'ps5', emoji: '⚔️', color: '#1a3a1a,#4a235a', year: 2023, img: 'https://cdn.cloudflare.steamstatic.com/steam/apps/1775010/library_600x900.jpg' },
+      { title: 'Ghostwire: Tokyo', genre: 'accion', platform: 'ps5', emoji: '👁️', color: '#0f0c29,#302b63', year: 2022, img: 'https://cdn.cloudflare.steamstatic.com/steam/apps/1475810/library_600x900.jpg' },
+      { title: 'Deathloop', genre: 'fps', platform: 'ps5', emoji: '🔁', color: '#1a1a1a,#f39c12', year: 2021, img: 'https://cdn.cloudflare.steamstatic.com/steam/apps/1252330/library_600x900.jpg' },
+      { title: 'Tekken 8', genre: 'lucha', platform: 'ps5', emoji: '💥', color: '#1a0d2e,#4a0080', year: 2024, img: 'https://cdn.cloudflare.steamstatic.com/steam/apps/1778820/library_600x900.jpg' },
+      { title: 'Street Fighter 6', genre: 'lucha', platform: 'both', emoji: '👊', color: '#1a1a1a,#c0392b', year: 2023, img: 'https://cdn.cloudflare.steamstatic.com/steam/apps/1716860/library_600x900.jpg' },
+      { title: 'Mortal Kombat 1', genre: 'lucha', platform: 'both', emoji: '🥊', color: '#1a0000,#8b0000', year: 2023, img: 'https://cdn.cloudflare.steamstatic.com/steam/apps/1971870/library_600x900.jpg' },
+      { title: 'Resident Evil 4 Remake', genre: 'horror', platform: 'both', emoji: '🧟', color: '#1c1c1c,#2d5a27', year: 2023, img: 'https://cdn.cloudflare.steamstatic.com/steam/apps/2050650/library_600x900.jpg' },
+      { title: 'Dead Space Remake', genre: 'horror', platform: 'ps5', emoji: '☠️', color: '#0d0d0d,#1a0000', year: 2023, img: 'https://cdn.cloudflare.steamstatic.com/steam/apps/1693980/library_600x900.jpg' },
+      { title: 'The Callisto Protocol', genre: 'horror', platform: 'ps5', emoji: '👾', color: '#0a0a0a,#1a0d2e', year: 2022, img: 'https://cdn.cloudflare.steamstatic.com/steam/apps/1892110/library_600x900.jpg' },
+      { title: 'A Plague Tale: Requiem', genre: 'aventura', platform: 'ps5', emoji: '🐀', color: '#1a1000,#2a2000', year: 2022, img: 'https://cdn.cloudflare.steamstatic.com/steam/apps/1887840/library_600x900.jpg' },
+      { title: 'Cyberpunk 2077', genre: 'rpg', platform: 'both', emoji: '🤖', color: '#0a0a00,#2a1a00', year: 2020, img: 'https://cdn.cloudflare.steamstatic.com/steam/apps/1091500/library_600x900.jpg' },
+      { title: 'Doom Eternal', genre: 'fps', platform: 'both', emoji: '😈', color: '#1a0000,#2a0000', year: 2020, img: 'https://cdn.cloudflare.steamstatic.com/steam/apps/782330/library_600x900.jpg' },
+      { title: 'FIFA 23', genre: 'deportes', platform: 'both', emoji: '⚽', color: '#154360,#1a5276', year: 2022, img: 'https://image.api.playstation.com/vulcan/ap/rnd/202207/0515/8G592GfK374.png' },
+      { title: 'EA Sports FC 24', genre: 'deportes', platform: 'both', emoji: '🏟️', color: '#1a3a5c,#154360', year: 2023, img: 'https://image.api.playstation.com/vulcan/ap/rnd/202307/1014/9H63G4H238.png' },
+      { title: 'NBA 2K24', genre: 'deportes', platform: 'both', emoji: '🏀', color: '#1a1a2e,#b7950b', year: 2023, img: 'https://cdn.cloudflare.steamstatic.com/steam/apps/2338770/library_600x900.jpg' },
+      { title: 'F1 23', genre: 'carreras', platform: 'both', emoji: '🏁', color: '#1a1a1a,#e74c3c', year: 2023, img: 'https://cdn.cloudflare.steamstatic.com/steam/apps/2108330/library_600x900.jpg' },
+      { title: 'Need for Speed Unbound', genre: 'carreras', platform: 'ps5', emoji: '🚗', color: '#1a1a1a,#f1c40f', year: 2022, img: 'https://cdn.cloudflare.steamstatic.com/steam/apps/1262560/library_600x900.jpg' },
+      // ── PS4 CLÁSICOS ──
+      { title: 'God of War (2018)', genre: 'accion', platform: 'ps4', emoji: '🪓', color: '#1a0a0a,#5a1a0a', year: 2018, img: 'https://cdn.cloudflare.steamstatic.com/steam/apps/1593500/library_600x900.jpg' },
+      { title: 'The Witcher 3: Wild Hunt', genre: 'rpg', platform: 'ps4', emoji: '🐺', color: '#1a2a1a,#4a4a1a', year: 2015, img: 'https://cdn.cloudflare.steamstatic.com/steam/apps/292030/library_600x900.jpg' },
+      { title: 'Red Dead Redemption 2', genre: 'aventura', platform: 'ps4', emoji: '🤠', color: '#3d1515,#8b4513', year: 2018, img: 'https://cdn.cloudflare.steamstatic.com/steam/apps/1174180/library_600x900.jpg' },
+      { title: 'GTA V', genre: 'accion', platform: 'ps4', emoji: '🌆', color: '#1a2a3a,#2d4a5a', year: 2013, img: 'https://cdn.cloudflare.steamstatic.com/steam/apps/271590/library_600x900.jpg' },
+      { title: 'The Last of Us Part II', genre: 'aventura', platform: 'ps4', emoji: '🌿', color: '#1a2a1a,#2a3a2a', year: 2020, img: 'https://image.api.playstation.com/vulcan/ap/rnd/202003/1816/tHjK5FhJ302g1.png' },
+      { title: 'Ghost of Tsushima', genre: 'aventura', platform: 'ps4', emoji: '🌸', color: '#1a0a0a,#4a1a1a', year: 2020, img: 'https://cdn.cloudflare.steamstatic.com/steam/apps/2215430/library_600x900.jpg' },
+      { title: 'Persona 5 Royal', genre: 'rpg', platform: 'ps4', emoji: '🃏', color: '#8b0000,#1a0000', year: 2020, img: 'https://cdn.cloudflare.steamstatic.com/steam/apps/1687950/library_600x900.jpg' },
+      { title: 'Bloodborne', genre: 'rpg', platform: 'ps4', emoji: '🩸', color: '#1a0a0a,#4a1a0a', year: 2015, img: 'https://image.api.playstation.com/vulcan/ap/rnd/202008/1717/74hT6dG65F932g4H59218FjK.png' },
+      { title: 'Uncharted 4', genre: 'aventura', platform: 'ps4', emoji: '🗺️', color: '#0a2a3a,#1a4a5a', year: 2016, img: 'https://image.api.playstation.com/vulcan/ap/rnd/202109/2816/tH63G4H1278.png' },
+      { title: 'Sekiro: Shadows Die Twice', genre: 'accion', platform: 'ps4', emoji: '🗡️', color: '#1a1a0a,#0a1a1a', year: 2019, img: 'https://cdn.cloudflare.steamstatic.com/steam/apps/814380/library_600x900.jpg' },
+      { title: 'Dark Souls III', genre: 'rpg', platform: 'ps4', emoji: '🔥', color: '#1a0a0a,#2a1a0a', year: 2016, img: 'https://cdn.cloudflare.steamstatic.com/steam/apps/374320/library_600x900.jpg' },
+      { title: 'Resident Evil 2 Remake', genre: 'horror', platform: 'ps4', emoji: '🧟', color: '#0a0a0a,#1a1a0a', year: 2019, img: 'https://cdn.cloudflare.steamstatic.com/steam/apps/883710/library_600x900.jpg' },
+      { title: 'Death Stranding', genre: 'aventura', platform: 'ps4', emoji: '🌧️', color: '#0a1a2e,#1a2a3e', year: 2019, img: 'https://cdn.cloudflare.steamstatic.com/steam/apps/1190460/library_600x900.jpg' },
+      { title: 'Horizon Zero Dawn', genre: 'aventura', platform: 'ps4', emoji: '🌅', color: '#16213e,#0a5c3b', year: 2017, img: 'https://cdn.cloudflare.steamstatic.com/steam/apps/1151640/library_600x900.jpg' },
+      { title: "Marvel's Spider-Man", genre: 'accion', platform: 'ps4', emoji: '🕷️', color: '#c0392b,#7d3c98', year: 2018, img: 'https://cdn.cloudflare.steamstatic.com/steam/apps/1817070/library_600x900.jpg' },
+      { title: 'Days Gone', genre: 'aventura', platform: 'ps4', emoji: '🏍️', color: '#1a1a0a,#2a2a0a', year: 2019, img: 'https://cdn.cloudflare.steamstatic.com/steam/apps/1259420/library_600x900.jpg' },
+      { title: 'Crash Bandicoot N. Sane', genre: 'accion', platform: 'ps4', emoji: '🦊', color: '#e67e22,#d35400', year: 2017, img: 'https://cdn.cloudflare.steamstatic.com/steam/apps/731490/library_600x900.jpg' },
+      { title: 'Hades', genre: 'accion', platform: 'both', emoji: '🔱', color: '#1a0a0a,#2a0a0a', year: 2020, img: 'https://cdn.cloudflare.steamstatic.com/steam/apps/1145360/library_600x900.jpg' },
+      { title: 'It Takes Two', genre: 'aventura', platform: 'both', emoji: '💑', color: '#1a2a3a,#0a1a2a', year: 2021, img: 'https://cdn.cloudflare.steamstatic.com/steam/apps/1426210/library_600x900.jpg' },
+      { title: 'Kena: Bridge of Spirits', genre: 'aventura', platform: 'both', emoji: '🌺', color: '#1abc9c,#16a085', year: 2021, img: 'https://cdn.cloudflare.steamstatic.com/steam/apps/1622650/library_600x900.jpg' },
+      { title: "Assassin's Creed Valhalla", genre: 'accion', platform: 'both', emoji: '🪓', color: '#0a1a0a,#1a2a1a', year: 2020, img: 'https://cdn.cloudflare.steamstatic.com/steam/apps/2208920/library_600x900.jpg' },
+      { title: 'Battlefield 2042', genre: 'fps', platform: 'both', emoji: '💣', color: '#0a1a2e,#1a2a3e', year: 2021, img: 'https://cdn.cloudflare.steamstatic.com/steam/apps/1517290/library_600x900.jpg' },
+      { title: 'Sifu', genre: 'lucha', platform: 'both', emoji: '🥋', color: '#1a0a00,#2a1a00', year: 2022, img: 'https://cdn.cloudflare.steamstatic.com/steam/apps/2138650/library_600x900.jpg' },
+      { title: 'Control', genre: 'accion', platform: 'ps4', emoji: '🔲', color: '#1a1a2e,#0a1a2e', year: 2019, img: 'https://cdn.cloudflare.steamstatic.com/steam/apps/870780/library_600x900.jpg' },
+      { title: 'Doom (2016)', genre: 'fps', platform: 'ps4', emoji: '👹', color: '#2a0000,#3a0000', year: 2016, img: 'https://cdn.cloudflare.steamstatic.com/steam/apps/379720/library_600x900.jpg' },
+      { title: 'RetroArch PS4', genre: 'accion', platform: 'ps4', emoji: '🕹️', color: '#1a1a1a,#2a2a2a', year: 2022, img: '' },
+    ];
+
+    // ——— ESTADO ———
+    let currentPlatform = 'all';
+    let currentGenre = 'all';
+
+    function normalize(s) {
+      return s.toLowerCase().replace(/[-':,!.\s&]+/g, '');
+    }
+
+    function setPlatform(p) {
+      currentPlatform = p;
+      document.querySelectorAll('.plat-btn').forEach(function(b){ b.classList.remove('active'); });
+      document.getElementById('plat-' + p).classList.add('active');
+      filterGames();
+    }
+
+    function setGenre(g, btn) {
+      currentGenre = g;
+      document.querySelectorAll('.filter-btn').forEach(function(b){ b.classList.remove('active'); });
+      btn.classList.add('active');
+      filterGames();
+    }
+
+    // ——— DOWNLOAD MODAL ———
+    function openModal(idx) {
+      var g = games[idx];
+      if (!g) return;
+      var overlay = document.getElementById('dlModal');
+      var imgEl   = document.getElementById('modalImg');
+      var fallback= document.getElementById('modalFallback');
+      document.getElementById('modalTitle').textContent = g.title;
+      document.getElementById('modalYear').textContent  =
+        g.year + ' \u00b7 ' + (g.platform === 'both' ? 'PS4 & PS5' : g.platform.toUpperCase());
+      if (g.img) {
+        imgEl.src = g.img;
+        imgEl.style.display = 'block';
+        fallback.style.display = 'none';
+      } else {
+        imgEl.style.display = 'none';
+        fallback.style.display = 'flex';
+        fallback.textContent = g.emoji;
+        fallback.style.background = 'linear-gradient(135deg,' + g.color + ')';
+      }
+      var q = encodeURIComponent(g.title);
+      var links = [
+        { icon: '🛸', name: 'NoPayStation', sub: 'Base de datos de PKGs de PlayStation', url: 'https://nopaystation.com/browse?name=' + q },
+        { icon: '🤖', name: 'r/ps4homebrew', sub: 'Buscar en Reddit PS4 Homebrew', url: 'https://www.reddit.com/r/ps4homebrew/search/?q=' + q + '&restrict_sr=1' },
+        { icon: '🎮', name: 'r/ps5homebrew', sub: 'Buscar en Reddit PS5 Homebrew', url: 'https://www.reddit.com/r/ps5homebrew/search/?q=' + q + '&restrict_sr=1' },
+        { icon: '🏠', name: 'PSX-Place Forums', sub: 'Foro homebrew PlayStation — releases', url: 'https://www.psx-place.com/search/?q=' + q + '&t=post' },
+        { icon: '📡', name: 'Wololo.net', sub: 'Noticias y lanzamientos de PKGs/exploits', url: 'https://wololo.net/?s=' + q },
+      ];
+      document.getElementById('modalLinks').innerHTML = links.map(function(l) {
+        return '<a class="dl-link" href="' + l.url + '" target="_blank" rel="noopener">' +
+          '<span class="dl-link-icon">' + l.icon + '</span>' +
+          '<div class="dl-link-info"><div class="dl-link-name">' + l.name + '</div>' +
+          '<div class="dl-link-sub">' + l.sub + '</div></div>' +
+          '<span class="dl-link-arrow">↗</span></a>';
+      }).join('');
+      overlay.classList.add('open');
+      document.body.style.overflow = 'hidden';
+    }
+
+    function closeModal() {
+      document.getElementById('dlModal').classList.remove('open');
+      document.body.style.overflow = '';
+    }
+
+    document.addEventListener('keydown', function(e){ if(e.key==='Escape') closeModal(); });
+
+    // ——— RENDER GAMES ———
+    function filterGames() {
+      var raw      = document.getElementById('gameSearch').value.trim();
+      var query    = normalize(raw);
+      var grid     = document.getElementById('gamesGrid');
+
+      var filtered = games.filter(function(g) {
+        var okPlat  = currentPlatform === 'all' || g.platform === currentPlatform || g.platform === 'both';
+        var okGenre = currentGenre === 'all' || g.genre === currentGenre;
+        var okQ     = !query || normalize(g.title).includes(query) || g.title.toLowerCase().includes(raw.toLowerCase());
+        return okPlat && okGenre && okQ;
+      });
+
+      document.getElementById('gamesCount').textContent = filtered.length;
+
+      if (filtered.length === 0) {
+        grid.innerHTML = '<div class="no-results"><div class="no-results-icon">🎮</div>' +
+          '<div>No se encontraron juegos. Prueba otro filtro o búsqueda.</div></div>';
+        return;
+      }
+
+      grid.innerHTML = filtered.map(function(g) {
+        var idx = games.indexOf(g);
+        var platBadge = g.platform === 'ps5'
+          ? '<span class="game-plat-badge badge-ps5">PS5</span>'
+          : g.platform === 'ps4'
+            ? '<span class="game-plat-badge badge-ps4">PS4</span>'
+            : '<span class="game-plat-badge badge-both">PS4+5</span>';
+        var safeTitle = g.title.replace(/"/g, '&quot;');
+        var coverContent = g.img
+          ? '<img class="game-cover-img loaded" src="' + g.img + '" alt="' + safeTitle + '" onerror="this.style.display=\'none\'" />' +
+            '<div class="game-cover-bg" style="background:linear-gradient(135deg,' + g.color + ')"></div>' +
+            '<div class="game-cover-emoji">' + g.emoji + '</div>'
+          : '<div class="game-cover-bg" style="background:linear-gradient(135deg,' + g.color + ')"></div>' +
+            '<div class="game-cover-emoji">' + g.emoji + '</div>';
+        return '<div class="game-card" onclick="openModal(' + idx + ')">' +
+          platBadge +
+          '<div class="game-cover">' + coverContent +
+            '<div class="game-download-overlay">' +
+              '<button class="game-dl-btn" onclick="event.stopPropagation();openModal(' + idx + ')">&#128229; Descargar PKG</button>' +
+            '</div>' +
+          '</div>' +
+          '<div class="game-info">' +
+            '<div class="game-title">' + g.title + '</div>' +
+            '<div class="game-meta"><span class="game-genre">' + g.year + '</span>' +
+              '<span class="game-status status-available">&#10003; PKG</span>' +
+            '</div>' +
+          '</div>' +
+        '</div>';
+      }).join('');
+    }
+
+    filterGames();
+
+  </script>
+
+  <!-- DOWNLOAD MODAL -->
+  <div class="dl-modal-overlay" id="dlModal" onclick="if(event.target===this)closeModal()">
+    <div class="dl-modal">
+      <div class="dl-modal-header">
+        <img class="dl-modal-img" id="modalImg" src="" alt="" style="display:none" />
+        <div class="dl-modal-img-fallback" id="modalFallback" style="display:flex"></div>
+        <div class="dl-modal-info">
+          <div class="dl-modal-title" id="modalTitle"></div>
+          <div class="dl-modal-year" id="modalYear"></div>
+          <div style="margin-top:0.5rem">
+            <span style="font-size:0.72rem;font-weight:700;color:var(--accent-green);background:rgba(0,255,136,0.1);border:1px solid rgba(0,255,136,0.25);padding:2px 10px;border-radius:50px">&#10003; PKG en comunidades</span>
+          </div>
+        </div>
+      </div>
+      <div class="dl-modal-body">
+        <div class="dl-modal-label">&#128269; Buscar en estas comunidades</div>
+        <div class="dl-links" id="modalLinks"></div>
+        <button class="dl-modal-close" onclick="closeModal()">&#10005; Cerrar</button>
+      </div>
+    </div>
+  </div>
+
+</body>
+</html>

@@ -497,8 +497,49 @@ function renderSavingsSummary(deal, prices) {
 
 
 // ═══════════════════════════════════════════════════════════════
-// FILTERS & SEARCH
-// ═══════════════════════════════════════════════════════════════
+async function handleSearch(searchTerm) {
+  state.filters.search = searchTerm;
+
+  if (!searchTerm) {
+    renderDeals(state.deals);
+    return;
+  }
+
+  // 1. Check if we have local matches
+  const localMatches = filterDeals(state.deals);
+  
+  if (localMatches.length > 0) {
+    renderDeals(state.deals);
+    return;
+  }
+
+  // 2. If no local matches, and searchTerm is long enough, do live search
+  if (searchTerm.length >= 3) {
+    showLoading();
+    try {
+      const res = await fetch(`/api/search?q=${encodeURIComponent(searchTerm)}`).then(r => r.json());
+      const results = res.results || [];
+      
+      // If we found live results, add them to our local state.deals list
+      if (results.length > 0) {
+        results.forEach(newDeal => {
+          // Avoid duplicates
+          if (!state.deals.some(d => d.id === newDeal.id)) {
+            state.deals.push(newDeal);
+          }
+        });
+      }
+      hideLoading();
+      renderDeals(state.deals);
+    } catch (err) {
+      console.error('Error doing remote search:', err);
+      hideLoading();
+      renderDeals(state.deals);
+    }
+  } else {
+    renderDeals(state.deals);
+  }
+}
 
 function setupFilters() {
   // Search input
@@ -506,10 +547,10 @@ function setupFilters() {
   if (searchInput) {
     searchInput.addEventListener('input', (e) => {
       clearTimeout(searchDebounceTimer);
+      const val = e.target.value.trim();
       searchDebounceTimer = setTimeout(() => {
-        state.filters.search = e.target.value.trim();
-        renderDeals(state.deals);
-      }, 300);
+        handleSearch(val);
+      }, 400);
     });
   }
 

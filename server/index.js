@@ -10,7 +10,7 @@ const path = require('path');
 
 const { REGIONS } = require('./regions');
 const { fetchRates, getRates } = require('./exchange-service');
-const { getDeals, searchGames } = require('./psn-service');
+const { getDeals, searchGames, searchAndScrapeGame } = require('./psn-service');
 const { generateDemoDeals } = require('./demo-data');
 const cache = require('./cache-service');
 
@@ -225,20 +225,77 @@ app.get('/api/deals', (req, res) => {
 /**
  * GET /api/search
  */
-app.get('/api/search', (req, res) => {
+app.get('/api/search', async (req, res) => {
   try {
     const query = req.query.q;
     if (!query || query.trim().length === 0) {
       return res.status(400).json({ error: 'Missing search query parameter "q"' });
     }
 
+    // 1. Search in local cachedDeals memory
     const results = searchGames(query, cachedDeals);
+    if (results.length > 0) {
+      return res.json({
+        results,
+        meta: {
+          query,
+          total: results.length,
+          cached: true
+        },
+      });
+    }
+
+    // 2. Clean query to create a safe cache key
+    const cleanQuery = query.toLowerCase().trim().replace(/[^a-z0-9]+/g, '-');
+    const cacheKey = `search-game:${cleanQuery}`;
+
+    // 3. Try to fetch from Redis KV cache
+    try {
+      const cachedResult = await cache.get(cacheKey);
+      if (cachedResult) {
+        console.log(`✅ Loaded search results from cache for: "${query}"`);
+        return res.json({
+          results: [cachedResult],
+          meta: {
+            query,
+            total: 1,
+            cached: true
+          }
+        });
+      }
+    } catch (err) {
+      console.warn(`⚠️ Error reading search cache: ${err.message}`);
+    }
+
+    // 4. Run live scraper search
+    const rates = getRates();
+    const liveResult = await searchAndScrapeGame(query, rates);
+
+    if (liveResult) {
+      // Save to cache with 1 day TTL (86400 seconds)
+      try {
+        await cache.set(cacheKey, liveResult, 86400);
+        console.log(`💾 Saved search results to Redis cache for: "${query}"`);
+      } catch (err) {
+        console.warn(`⚠️ Error saving search to cache: ${err.message}`);
+      }
+
+      return res.json({
+        results: [liveResult],
+        meta: {
+          query,
+          total: 1,
+          cached: false
+        }
+      });
+    }
 
     res.json({
-      results,
+      results: [],
       meta: {
         query,
-        total: results.length,
+        total: 0,
+        cached: false
       },
     });
   } catch (error) {

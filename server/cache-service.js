@@ -67,10 +67,14 @@ async function get(key) {
  * @param {any} value - Value to serialize and save.
  * @returns {Promise<boolean>} Success status.
  */
-async function set(key, value) {
+async function set(key, value, ttlSeconds = null) {
   if (kv) {
     try {
-      await kv.set(key, JSON.stringify(value));
+      if (ttlSeconds) {
+        await kv.set(key, JSON.stringify(value), 'EX', ttlSeconds);
+      } else {
+        await kv.set(key, JSON.stringify(value));
+      }
       return true;
     } catch (err) {
       console.error(`❌ Cache Service: Error writing key "${key}" to KV:`, err.message);

@@ -645,4 +645,55 @@ function searchGames(query, cachedDeals) {
   );
 }
 
-module.exports = { getDeals, searchGames, GAME_CATALOG };
+/**
+ * Live search and scrape a game by query across all 11 regions.
+ * Searches in default region (PE or US) to resolve game details, then scrapes regional pricing.
+ * 
+ * @param {string} query
+ * @param {Object} exchangeRates
+ * @returns {Promise<Object|null>} A complete deal object or null.
+ */
+async function searchAndScrapeGame(query, exchangeRates) {
+  if (!query || typeof query !== 'string' || query.trim().length === 0) return null;
+  const q = query.trim();
+  console.log(`🔍 Searching PS Store live for query: "${q}"`);
+
+  // 1. Try to search in Peru first
+  const peRegion = REGIONS.find(r => r.code === 'PE') || REGIONS[0];
+  let searchRes = await scrapeRegionPrice(peRegion, q);
+
+  // 2. Try US region as fallback if Peru failed
+  if (!searchRes.success) {
+    const usRegion = REGIONS.find(r => r.code === 'US');
+    if (usRegion) {
+      searchRes = await scrapeRegionPrice(usRegion, q);
+    }
+  }
+
+  if (!searchRes.success) {
+    console.warn(`❌ Live search failed for query "${q}": ${searchRes.error || 'not found'}`);
+    return null;
+  }
+
+  console.log(`✅ Live search found game: "${searchRes.productName}" (ID: ${searchRes.productId})`);
+
+  // 3. Create the game catalog metadata item dynamically
+  const gameInfo = {
+    id: searchRes.productId || searchRes.productName.toLowerCase().replace(/[^a-z0-9]+/g, '-'),
+    name: searchRes.productName,
+    searchTerm: searchRes.productName, // Search the exact resolved game name for other regions
+    platform: 'PS5/PS4',
+    genre: 'Juego',
+    publisher: 'PlayStation Store',
+    rating: 4.5,
+    gradient: 'linear-gradient(135deg, #1e3c72, #2a5298)',
+    imageUrl: searchRes.imageUrl
+  };
+
+  // 4. Scrape all 11 regions for this resolved game in parallel (buildDeal does this)
+  const deal = await buildDeal(gameInfo, exchangeRates);
+  return deal;
+}
+
+module.exports = { getDeals, searchGames, searchAndScrapeGame, GAME_CATALOG };
+
