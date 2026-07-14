@@ -10,7 +10,7 @@ const path = require('path');
 
 const { REGIONS } = require('./regions');
 const { fetchRates, getRates } = require('./exchange-service');
-const { getDeals, searchGames, searchAndScrapeGame } = require('./psn-service');
+const { getDeals, searchGames, searchAndScrapeGame, searchAndScrapeGamesList } = require('./psn-service');
 const { generateDemoDeals } = require('./demo-data');
 const cache = require('./cache-service');
 
@@ -237,37 +237,38 @@ app.get('/api/search', async (req, res) => {
 
     // 2. Clean query to create a safe cache key
     const cleanQuery = query.toLowerCase().trim().replace(/[^a-z0-9]+/g, '-');
-    const cacheKey = `search-game:${cleanQuery}`;
+    const cacheKey = `search-game-list:${cleanQuery}`;
 
     // 3. Try to fetch from Redis KV cache (unless refresh=true is requested)
-    let liveResult = null;
+    let liveResults = [];
     let cached = false;
     const bypassCache = req.query.refresh === 'true';
 
     if (!bypassCache) {
       try {
-        liveResult = await cache.get(cacheKey);
-        if (liveResult) {
-          console.log(`✅ Loaded search results from cache for: "${query}"`);
+        const cachedResult = await cache.get(cacheKey);
+        if (cachedResult && Array.isArray(cachedResult)) {
+          console.log(`✅ Loaded search list results from cache for: "${query}"`);
+          liveResults = cachedResult;
           cached = true;
         }
       } catch (err) {
         console.warn(`⚠️ Error reading search cache: ${err.message}`);
       }
     } else {
-      console.log(`🔄 Cache bypass requested for search: "${query}"`);
+      console.log(`🔄 Cache bypass requested for search list: "${query}"`);
     }
 
     // 4. Run live scraper search if not found in cache
-    if (!liveResult) {
+    if (!cached || liveResults.length === 0) {
       const rates = getRates();
-      liveResult = await searchAndScrapeGame(query, rates);
+      liveResults = await searchAndScrapeGamesList(query, rates);
 
-      if (liveResult) {
+      if (liveResults && liveResults.length > 0) {
         // Save to cache with 1 day TTL (86400 seconds)
         try {
-          await cache.set(cacheKey, liveResult, 86400);
-          console.log(`💾 Saved search results to Redis cache for: "${query}"`);
+          await cache.set(cacheKey, liveResults, 86400);
+          console.log(`💾 Saved search list results to Redis cache for: "${query}"`);
         } catch (err) {
           console.warn(`⚠️ Error saving search to cache: ${err.message}`);
         }
@@ -276,8 +277,12 @@ app.get('/api/search', async (req, res) => {
 
     // 5. Merge results (avoiding duplicates)
     const results = [...localResults];
-    if (liveResult && !results.some(r => r.id === liveResult.id)) {
-      results.push(liveResult);
+    if (liveResults && liveResults.length > 0) {
+      liveResults.forEach(liveDeal => {
+        if (!results.some(r => r.id === liveDeal.id)) {
+          results.push(liveDeal);
+        }
+      });
     }
 
     res.json({

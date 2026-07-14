@@ -724,5 +724,219 @@ async function searchAndScrapeGame(query, exchangeRates) {
   return deal;
 }
 
-module.exports = { getDeals, searchGames, searchAndScrapeGame, GAME_CATALOG };
+async function scrapeRegionProductsList(region, query) {
+  const locale = region.language.toLowerCase();
+  const url = `https://store.playstation.com/${locale}/search/${encodeURIComponent(query)}`;
+
+  try {
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), SCRAPE_TIMEOUT_MS);
+
+    const res = await fetch(url, {
+      signal: controller.signal,
+      headers: { 'User-Agent': USER_AGENT },
+    });
+    clearTimeout(timer);
+
+    if (!res.ok) return [];
+
+    const html = await res.text();
+    const match = html.match(/<script id="__NEXT_DATA__" type="application\/json">([\s\S]*?)<\/script>/);
+    if (!match) return [];
+
+    const apolloState = JSON.parse(match[1]).props?.apolloState;
+    if (!apolloState) return [];
+
+    const REJECT_STRINGS = ['add_on', 'addon', 'level', 'costume', 'season_pass', 'character', 'item', 'map', 'theme', 'avatar', 'other', 'premium_edition', 'game_bundle'];
+    const GAME_CLASSIFICATIONS = new Set(['full_game', 'FULL_GAME', 'game', 'GAME']);
+    const GAME_STRINGS = ['full game', 'juego completo', 'vollständiges spiel', 'jogo completo', 'jeu complet', 'полная игра'];
+
+    const products = Object.entries(apolloState)
+      .filter(([k, v]) => v.__typename === 'Product' || k.startsWith('Product:'))
+      .map(([, v]) => {
+        const classification = (v.storeDisplayClassification || v.localizedStoreDisplayClassification || '').toLowerCase().replace('_', ' ');
+        const isGame = GAME_CLASSIFICATIONS.has(v.storeDisplayClassification) ||
+                       GAME_STRINGS.some(g => classification.includes(g)) ||
+                       (!REJECT_STRINGS.some(r => classification.includes(r)));
+
+        return {
+          id: v.id,
+          name: v.name,
+          isGame,
+          classification: v.storeDisplayClassification || v.localizedStoreDisplayClassification,
+          price: v.price ? {
+            base: v.price.basePrice,
+            discounted: v.price.discountedPrice,
+            isFree: v.price.isFree,
+          } : null,
+          media: v.media || (v.personalizedMeta?.media) || null,
+        };
+      })
+      .filter(p => p.name && p.isGame && p.price);
+
+    return products;
+  } catch (err) {
+    return [];
+  }
+}
+
+async function searchAndScrapeGamesList(query, exchangeRates) {
+  if (!query || typeof query !== 'string' || query.trim().length === 0) return [];
+  const q = query.trim();
+  console.log(`🔍 Querying PS Store list in parallel across all regions for: "${q}"`);
+
+  const regionPromises = REGIONS.map(async (region) => {
+    const products = await scrapeRegionProductsList(region, q);
+    return { region, products };
+  });
+
+  const regionResults = await Promise.all(regionPromises);
+
+  const normalizeForGrouping = (name) => {
+    if (!name) return '';
+    return name.toLowerCase()
+      .normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+      .replace(/™|®|©/g, '')
+      .replace(/[^a-z0-9\s]/g, '')
+      .replace(/\s+/g, ' ')
+      .trim();
+  };
+
+  const groups = {};
+
+  regionResults.forEach(({ region, products }) => {
+    products.forEach(p => {
+      const norm = normalizeForGrouping(p.name);
+      if (!groups[norm]) {
+        groups[norm] = {
+          name: p.name,
+          normalized: norm,
+          media: p.media,
+          classification: p.classification,
+          regionalProducts: {}
+        };
+      }
+      groups[norm].regionalProducts[region.code] = p;
+    });
+  });
+
+  const deals = Object.values(groups).map(group => {
+    const prices = [];
+    let onSale = false;
+    let maxDiscount = 0;
+    let scrapedImageUrl = null;
+
+    const masterMedia = Array.isArray(group.media)
+      ? (group.media.find(m => m.role === 'MASTER' && m.type === 'IMAGE') || 
+         group.media.find(m => m.type === 'IMAGE') || 
+         group.media[0])
+      : null;
+    if (masterMedia?.url) scrapedImageUrl = masterMedia.url;
+
+    REGIONS.forEach(region => {
+      const p = group.regionalProducts[region.code];
+      if (!p) {
+        prices.push({
+          regionCode: region.code,
+          regionName: region.name,
+          emoji: region.emoji,
+          available: false,
+          priceStr: 'N/A',
+          priceValue: null,
+          priceUSD: null,
+          effectivePriceUSD: null,
+          originalPriceStr: 'N/A',
+          originalPriceUSD: null,
+          isSale: false,
+          discountPercent: 0,
+        });
+        return;
+      }
+
+      const baseVal = parsePriceString(p.price.base, region.storeCurrency);
+      const discVal = parsePriceString(p.price.discounted, region.storeCurrency);
+      const effectiveVal = (discVal > 0 && discVal < baseVal) ? discVal : baseVal;
+
+      const storeUrl = p.id
+        ? `https://store.playstation.com/${region.language.toLowerCase()}/product/${p.id}`
+        : `https://store.playstation.com/${region.language.toLowerCase()}/search/${encodeURIComponent(group.name)}`;
+
+      const rate = exchangeRates[region.storeCurrency] || 1;
+      const effectivePriceUSD = region.storeCurrency === 'USD' ? effectiveVal : effectiveVal / rate;
+      const originalPriceUSD = region.storeCurrency === 'USD' ? baseVal : baseVal / rate;
+
+      const isSale = discVal > 0 && discVal < baseVal;
+      const discountPercent = baseVal > 0 ? Math.round((1 - effectiveVal / baseVal) * 100) : 0;
+
+      if (isSale) {
+        onSale = true;
+        maxDiscount = Math.max(maxDiscount, discountPercent);
+      }
+
+      prices.push({
+        regionCode: region.code,
+        regionName: region.name,
+        emoji: region.emoji,
+        available: true,
+        priceStr: p.price.discounted || p.price.base,
+        priceValue: effectiveVal,
+        priceUSD: parseFloat(effectivePriceUSD.toFixed(2)),
+        effectivePriceUSD: parseFloat(effectivePriceUSD.toFixed(2)),
+        originalPriceStr: p.price.base,
+        originalPriceUSD: parseFloat(originalPriceUSD.toFixed(2)),
+        isSale,
+        discountPercent,
+        storeCurrency: region.storeCurrency,
+        storeUrl,
+      });
+    });
+
+    const availablePrices = prices.filter(p => p.available).sort((a, b) => a.effectivePriceUSD - b.effectivePriceUSD);
+    const bestPrice = availablePrices[0] || null;
+    const homePrice = prices.find(p => p.regionCode === 'PE') || null;
+
+    let savingsVsHome = 0;
+    if (homePrice?.effectivePriceUSD > 0 && bestPrice) {
+      savingsVsHome = parseFloat(
+        ((homePrice.effectivePriceUSD - bestPrice.effectivePriceUSD) / homePrice.effectivePriceUSD * 100).toFixed(1)
+      );
+    }
+
+    const firstProduct = Object.values(group.regionalProducts)[0];
+    const dealId = firstProduct?.id || group.name.toLowerCase().replace(/[^a-z0-9]+/g, '-');
+
+    return {
+      id: dealId,
+      name: group.name,
+      platform: 'PS5/PS4',
+      genre: 'Juego',
+      publisher: 'PlayStation Store',
+      rating: 4.5,
+      gradient: 'linear-gradient(135deg, #1e3c72, #2a5298)',
+      imageUrl: scrapedImageUrl,
+      onSale,
+      discountPercent: maxDiscount,
+      bestPrice,
+      prices,
+      savingsVsHome: Math.max(0, savingsVsHome),
+      bestStoreUrl: bestPrice?.storeUrl || null,
+      releaseDate: '2022-01-01',
+      basePriceUSD: bestPrice?.originalPriceUSD || bestPrice?.effectivePriceUSD || 0,
+    };
+  });
+
+  const sortedDeals = deals
+    .filter(d => d.prices.filter(p => p.available).length >= 2)
+    .sort((a, b) => {
+      const aAvailable = a.prices.filter(p => p.available).length;
+      const bAvailable = b.prices.filter(p => p.available).length;
+      return bAvailable - aAvailable;
+    })
+    .slice(0, 5);
+
+  return sortedDeals;
+}
+
+module.exports = { getDeals, searchGames, searchAndScrapeGame, searchAndScrapeGamesList, GAME_CATALOG };
+
 
