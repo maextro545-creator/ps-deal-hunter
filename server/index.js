@@ -232,38 +232,24 @@ app.get('/api/search', async (req, res) => {
       return res.status(400).json({ error: 'Missing search query parameter "q"' });
     }
 
-    // 1. Search in local cachedDeals memory
-    const results = searchGames(query, cachedDeals);
-    if (results.length > 0) {
-      return res.json({
-        results,
-        meta: {
-          query,
-          total: results.length,
-          cached: true
-        },
-      });
-    }
+    // 1. Find local matches in cachedDeals memory
+    const localResults = searchGames(query, cachedDeals);
 
     // 2. Clean query to create a safe cache key
     const cleanQuery = query.toLowerCase().trim().replace(/[^a-z0-9]+/g, '-');
     const cacheKey = `search-game:${cleanQuery}`;
 
     // 3. Try to fetch from Redis KV cache (unless refresh=true is requested)
+    let liveResult = null;
+    let cached = false;
     const bypassCache = req.query.refresh === 'true';
+
     if (!bypassCache) {
       try {
-        const cachedResult = await cache.get(cacheKey);
-        if (cachedResult) {
+        liveResult = await cache.get(cacheKey);
+        if (liveResult) {
           console.log(`✅ Loaded search results from cache for: "${query}"`);
-          return res.json({
-            results: [cachedResult],
-            meta: {
-              query,
-              total: 1,
-              cached: true
-            }
-          });
+          cached = true;
         }
       } catch (err) {
         console.warn(`⚠️ Error reading search cache: ${err.message}`);
@@ -272,35 +258,34 @@ app.get('/api/search', async (req, res) => {
       console.log(`🔄 Cache bypass requested for search: "${query}"`);
     }
 
-    // 4. Run live scraper search
-    const rates = getRates();
-    const liveResult = await searchAndScrapeGame(query, rates);
+    // 4. Run live scraper search if not found in cache
+    if (!liveResult) {
+      const rates = getRates();
+      liveResult = await searchAndScrapeGame(query, rates);
 
-    if (liveResult) {
-      // Save to cache with 1 day TTL (86400 seconds)
-      try {
-        await cache.set(cacheKey, liveResult, 86400);
-        console.log(`💾 Saved search results to Redis cache for: "${query}"`);
-      } catch (err) {
-        console.warn(`⚠️ Error saving search to cache: ${err.message}`);
-      }
-
-      return res.json({
-        results: [liveResult],
-        meta: {
-          query,
-          total: 1,
-          cached: false
+      if (liveResult) {
+        // Save to cache with 1 day TTL (86400 seconds)
+        try {
+          await cache.set(cacheKey, liveResult, 86400);
+          console.log(`💾 Saved search results to Redis cache for: "${query}"`);
+        } catch (err) {
+          console.warn(`⚠️ Error saving search to cache: ${err.message}`);
         }
-      });
+      }
+    }
+
+    // 5. Merge results (avoiding duplicates)
+    const results = [...localResults];
+    if (liveResult && !results.some(r => r.id === liveResult.id)) {
+      results.push(liveResult);
     }
 
     res.json({
-      results: [],
+      results,
       meta: {
         query,
-        total: 0,
-        cached: false
+        total: results.length,
+        cached
       },
     });
   } catch (error) {

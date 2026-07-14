@@ -509,30 +509,32 @@ async function handleSearch(searchTerm) {
     return;
   }
 
-  // 1. Check if we have local matches
-  const localMatches = filterDeals(state.deals);
-  
-  if (localMatches.length > 0) {
-    renderDeals(state.deals);
-    return;
-  }
+  // 1. Render local matches instantly to keep the UI snappy
+  renderDeals(state.deals);
 
-  // 2. If no local matches, and searchTerm is long enough, do live search
+  // 2. Run background live store search if search term is long enough
   if (searchTerm.length >= 3) {
-    showLoading();
+    const localMatches = filterDeals(state.deals);
+    if (localMatches.length === 0) {
+      showLoading();
+    }
+    
     try {
       const res = await fetch(`/api/search?q=${encodeURIComponent(searchTerm)}`).then(r => r.json());
       const results = res.results || [];
       
-      // Populate search results IDs so they pass the client-side filter
+      // Update matching search IDs
       state.searchResults = results.map(r => r.id);
       
-      // If we found live results, add them to our local state.deals list
+      // Merge results into our local state.deals list
       if (results.length > 0) {
         results.forEach(newDeal => {
-          // Avoid duplicates
-          if (!state.deals.some(d => d.id === newDeal.id)) {
+          const idx = state.deals.findIndex(d => d.id === newDeal.id);
+          if (idx === -1) {
             state.deals.push(newDeal);
+          } else {
+            // Update in-memory details
+            state.deals[idx] = newDeal;
           }
         });
       }
@@ -543,8 +545,6 @@ async function handleSearch(searchTerm) {
       hideLoading();
       renderDeals(state.deals);
     }
-  } else {
-    renderDeals(state.deals);
   }
 }
 
