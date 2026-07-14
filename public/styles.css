@@ -1520,3 +1520,29 @@ body::before {
   opacity: 0.9;
   transform: translateY(-1px);
 }
+
+.load-more-container {
+  display: flex;
+  justify-content: center;
+  margin: 32px auto 48px;
+  width: 100%;
+}
+
+.btn-load-more {
+  background: var(--bg-card);
+  border: 1px solid var(--border-glass);
+  color: var(--text-secondary);
+  padding: 14px 32px;
+  border-radius: var(--radius-sm);
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all var(--transition-normal);
+}
+
+.btn-load-more:hover {
+  background: var(--bg-card-hover);
+  color: var(--text-main);
+  border-color: var(--border-hover);
+  transform: translateY(-2px);
+}

@@ -12,6 +12,7 @@ let state = {
   status: {},
   meta: {},
   activeTab: 'catalog', // 'catalog' or 'hot-deals'
+  categoryPage: 1, // current category pagination page
   filters: {
     search: '',
     onSale: false,
@@ -91,6 +92,12 @@ async function init() {
   const regionsClearAll = $('#btn-regions-clear-all');
   if (regionsClearAll) {
     regionsClearAll.addEventListener('click', () => toggleAllRegions(false));
+  }
+
+  // Load more button listener
+  const loadMoreBtn = $('#btn-load-more');
+  if (loadMoreBtn) {
+    loadMoreBtn.addEventListener('click', handleLoadMore);
   }
 
   await fetchData();
@@ -223,6 +230,8 @@ function renderDeals() {
 
   if (filtered.length === 0) {
     emptyState && (emptyState.hidden = false);
+    const loadMoreContainer = $('#load-more-container');
+    if (loadMoreContainer) loadMoreContainer.hidden = true;
     return;
   }
 
@@ -232,6 +241,11 @@ function renderDeals() {
     const card = createDealCard(deal, i);
     grid.appendChild(card);
   });
+
+  const loadMoreContainer = $('#load-more-container');
+  if (loadMoreContainer) {
+    loadMoreContainer.hidden = state.activeTab !== 'hot-deals';
+  }
 }
 
 async function switchTab(tab) {
@@ -1000,4 +1014,41 @@ function toggleAllRegions(select) {
   localStorage.setItem('activeRegions', JSON.stringify(state.activeRegions));
   renderRegionsList();
   renderDeals();
+}
+
+async function handleLoadMore() {
+  const loadMoreBtn = $('#btn-load-more');
+  if (!loadMoreBtn) return;
+
+  const originalText = loadMoreBtn.innerHTML;
+  loadMoreBtn.disabled = true;
+  loadMoreBtn.innerHTML = `Cargando más ofertas... ⏳`;
+
+  state.categoryPage++;
+
+  try {
+    const res = await fetch(`/api/deals/category?id=d1fa27b1-da1f-4c4b-8e7a-997e59b787f7&page=${state.categoryPage}`).then(r => r.json());
+    const newDeals = res.deals || [];
+
+    if (newDeals.length > 0) {
+      newDeals.forEach(deal => {
+        if (!state.categoryDeals.find(d => d.id === deal.id)) {
+          state.categoryDeals.push(deal);
+        }
+      });
+      renderDeals();
+    } else {
+      loadMoreBtn.innerHTML = `No hay más ofertas 🎉`;
+      setTimeout(() => {
+        loadMoreBtn.hidden = true;
+      }, 3000);
+      return;
+    }
+  } catch (err) {
+    console.error('Error loading more category deals:', err);
+    state.categoryPage--;
+  }
+
+  loadMoreBtn.disabled = false;
+  loadMoreBtn.innerHTML = originalText;
 }
