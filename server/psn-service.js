@@ -34,6 +34,17 @@ const GAME_CATALOG = [
     imageUrl: 'https://image.api.playstation.com/vulcan/ap/rnd/202206/0720/yU3GlRb3WTf7jVrNb3Yajbml.png',
   },
   {
+    id: 'god-of-war-2018',
+    name: "God of War (2018)",
+    searchTerm: 'God of War',
+    platform: 'PS4',
+    genre: 'Acción/Aventura',
+    publisher: 'Santa Monica Studio',
+    rating: 4.8,
+    gradient: 'linear-gradient(135deg, #1e3c72, #2a5298)',
+    imageUrl: 'https://image.api.playstation.com/vulcan/img/rnd/202011/1021/X3WIAh63yKhRRiMohLoJMeQu.png',
+  },
+  {
     id: 'spider-man-2',
     name: "Marvel's Spider-Man 2",
     searchTerm: "Spider-Man 2",
