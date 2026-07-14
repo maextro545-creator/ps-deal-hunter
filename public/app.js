@@ -388,7 +388,7 @@ function createDealCard(deal, index) {
         </div>
         <div class="price-row home">
           <span class="price-label">🇵🇪 Perú</span>
-          <span class="price-value">$${(homePriceObj?.effectivePriceUSD || 0).toFixed(2)}</span>
+          <span class="price-value">${homePriceObj && homePriceObj.available ? `$${homePriceObj.effectivePriceUSD.toFixed(2)}` : 'N/A'}</span>
         </div>
         ${deal.onSale && originalPriceUS != null ? `
           <div class="price-row original">
@@ -435,13 +435,13 @@ function openComparison(gameId) {
   DOM.modalHeader().style.backgroundSize = 'cover';
   DOM.modalHeader().style.backgroundPosition = 'center';
 
-  // Build price table filtered by active regions
+  // Build price table filtered by active regions and available prices
   const prices = [...(deal.prices || [])]
-    .filter(p => state.activeRegions.includes(p.regionCode))
+    .filter(p => p.available && state.activeRegions.includes(p.regionCode))
     .sort((a, b) => a.effectivePriceUSD - b.effectivePriceUSD);
 
   const homePriceObj = deal.prices?.find(p => p.regionCode === 'PE');
-  const homePriceUSD = homePriceObj?.effectivePriceUSD || 0;
+  const homePriceUSD = homePriceObj && homePriceObj.available ? homePriceObj.effectivePriceUSD : 0;
 
   const cheapestCode = prices[0]?.regionCode;
   const worstCode = prices[prices.length - 1]?.regionCode;
