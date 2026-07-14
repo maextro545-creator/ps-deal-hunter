@@ -667,7 +667,7 @@ async function buildDeal(gameInfo, exchangeRates) {
  * @returns {Promise<Array>}      Array of deal objects.
  */
 async function fetchLiveDeals(exchangeRates, previousDeals = []) {
-  const BATCH_SIZE = 1; // max concurrent game fetches (11 regional requests)
+  const BATCH_SIZE = 4; // max concurrent game fetches (44 regional requests)
   const results = [];
 
   for (let i = 0; i < GAME_CATALOG.length; i += BATCH_SIZE) {
