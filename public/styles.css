@@ -538,6 +538,20 @@ body::before {
   box-shadow: 0 2px 8px rgba(239, 68, 68, 0.4);
 }
 
+.badge-ends-at {
+  padding: 4px 10px;
+  border-radius: 100px;
+  background: linear-gradient(135deg, #ef4444, #b91c1c);
+  color: #fff;
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  box-shadow: 0 2px 8px rgba(239, 68, 68, 0.4);
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
 .badge-best {
   display: inline-flex;
   align-items: center;

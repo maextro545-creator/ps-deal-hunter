@@ -252,6 +252,50 @@ const GAME_CATALOG = [
     rating: 4.6,
     imageUrl: 'https://image.api.playstation.com/vulcan/ap/rnd/202204/0416/B3Jm1lFVuWjVFoBJNaZ0dfbz.png',
   },
+  {
+    id: 'gta-v',
+    name: 'Grand Theft Auto V',
+    searchTerm: 'Grand Theft Auto V',
+    platform: 'PS5/PS4',
+    genre: 'Acción',
+    publisher: 'Rockstar Games',
+    rating: 4.7,
+    gradient: 'linear-gradient(135deg, #1b4d3e, #0a2f1d)',
+    imageUrl: 'https://image.api.playstation.com/vulcan/ap/rnd/202202/2823/50T3GgV95Fec4Vj4xSgK889P.png',
+  },
+  {
+    id: 'witcher-3',
+    name: 'The Witcher 3: Wild Hunt',
+    searchTerm: 'The Witcher 3 Wild Hunt',
+    platform: 'PS5/PS4',
+    genre: 'RPG',
+    publisher: 'CD Projekt Red',
+    rating: 4.8,
+    gradient: 'linear-gradient(135deg, #3d0c02, #1f0300)',
+    imageUrl: 'https://image.api.playstation.com/vulcan/ap/rnd/202211/0711/9F5w3g5uG9g5r5t5uG9g5r5t.png',
+  },
+  {
+    id: 'miles-morales',
+    name: "Marvel's Spider-Man: Miles Morales",
+    searchTerm: 'Miles Morales',
+    platform: 'PS5/PS4',
+    genre: 'Acción/Aventura',
+    publisher: 'Insomniac Games',
+    rating: 4.7,
+    gradient: 'linear-gradient(135deg, #8b0000, #111111)',
+    imageUrl: 'https://image.api.playstation.com/vulcan/ap/rnd/202009/1717/9F5w3g5uG9g5r5t5uG9g5r5t.png',
+  },
+  {
+    id: 'rdr2',
+    name: 'Red Dead Redemption 2',
+    searchTerm: 'Red Dead Redemption 2',
+    platform: 'PS4',
+    genre: 'Acción/Aventura',
+    publisher: 'Rockstar Games',
+    rating: 4.8,
+    gradient: 'linear-gradient(135deg, #800000, #2b0000)',
+    imageUrl: 'https://image.api.playstation.com/vulcan/ap/rnd/202011/0517/X3WIAh63yKhRRiMohLoJMeQu.png',
+  },
 ];
 
 // ─── Price Parsing ───────────────────────────────────────────────────────────────
@@ -463,6 +507,27 @@ async function scrapeRegionPrice(region, searchTerm) {
   }
 }
 
+async function scrapeDiscountEndDate(productId) {
+  if (!productId) return null;
+  const url = `https://store.playstation.com/es-pe/product/${productId}`;
+  try {
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), 6000);
+    const res = await fetch(url, {
+      signal: controller.signal,
+      headers: { 'User-Agent': USER_AGENT }
+    });
+    clearTimeout(timer);
+    if (!res.ok) return null;
+    const html = await res.text();
+    const match = html.match(/La oferta finaliza el\s+(\d{1,2}\/\d{1,2}\/\d{4}(?:\s+\d{1,2}:\d{2}\s+(?:AM|PM)\s+UTC)?)(?=\s*<|\s*\\|")/i);
+    return match ? match[1].trim() : null;
+  } catch (err) {
+    console.warn(`⚠️ Failed to scrape end date for ${productId}: ${err.message}`);
+    return null;
+  }
+}
+
 // ─── Build Deal Object ───────────────────────────────────────────────────────────
 
 /**
@@ -558,6 +623,16 @@ async function buildDeal(gameInfo, exchangeRates) {
     .filter(sr => sr.status === 'fulfilled' && sr.value.result?.success && sr.value.result?.imageUrl)
     .map(sr => sr.value.result.imageUrl)[0];
 
+  let endsAt = null;
+  if (onSale) {
+    const pePrice = prices.find(p => p.regionCode === 'PE');
+    const match = pePrice?.storeUrl?.match(/\/product\/([A-Za-z0-9_-]+)/);
+    const peProductId = match ? match[1] : null;
+    if (peProductId) {
+      endsAt = await scrapeDiscountEndDate(peProductId);
+    }
+  }
+
   return {
     id: gameInfo.id,
     name: gameInfo.name,
@@ -572,6 +647,7 @@ async function buildDeal(gameInfo, exchangeRates) {
     bestPrice,
     prices,
     savingsVsHome: Math.max(0, savingsVsHome),
+    endsAt,
     // Best store URL (cheapest region)
     bestStoreUrl: bestPrice?.storeUrl || null,
     // Legacy fields for demo-data compatibility
@@ -944,6 +1020,20 @@ async function searchAndScrapeGamesList(query, exchangeRates) {
       return bAvailable - aAvailable;
     })
     .slice(0, 5);
+
+  const saleDeals = sortedDeals.filter(d => d.onSale);
+  const datePromises = saleDeals.map(async (deal) => {
+    const pePrice = deal.prices.find(p => p.regionCode === 'PE');
+    const match = pePrice?.storeUrl?.match(/\/product\/([A-Za-z0-9_-]+)/);
+    const productId = match ? match[1] : null;
+    if (productId) {
+      const endsAt = await scrapeDiscountEndDate(productId);
+      if (endsAt) {
+        deal.endsAt = endsAt;
+      }
+    }
+  });
+  await Promise.all(datePromises);
 
   return sortedDeals;
 }

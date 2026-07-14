@@ -285,6 +285,7 @@ function createDealCard(deal, index) {
       <div class="card-badges" style="position:relative;z-index:1;">
         <span class="badge-platform">${escapeHtml(deal.platform || 'PS5')}</span>
         ${deal.onSale ? `<span class="badge-sale">-${deal.discountPercent}%</span>` : ''}
+        ${deal.endsAt ? `<span class="badge-ends-at" title="Termina el ${escapeHtml(deal.endsAt)}">⏱️ ${escapeHtml(formatEndsAt(deal.endsAt))}</span>` : ''}
       </div>
       <div class="card-title" style="position:relative;z-index:1;">
         <h3>${escapeHtml(deal.name)}</h3>
@@ -735,4 +736,42 @@ function escapeHtml(str) {
   const div = document.createElement('div');
   div.textContent = str;
   return div.innerHTML;
+}
+
+function formatEndsAt(endsAtStr) {
+  if (!endsAtStr) return '';
+  
+  // Try to parse "16/7/2026 06:59 AM UTC" or "16/7/2026"
+  const parts = endsAtStr.match(/(\d+)\/(\d+)\/(\d+)(?:\s+(\d+):(\d+)\s+(AM|PM))?/i);
+  if (!parts) return endsAtStr;
+  
+  const day = parseInt(parts[1]);
+  const month = parseInt(parts[2]) - 1;
+  const year = parseInt(parts[3]);
+  let hour = parts[4] ? parseInt(parts[4]) : 0;
+  const minute = parts[5] ? parseInt(parts[5]) : 0;
+  const ampm = parts[6];
+  
+  if (ampm && ampm.toUpperCase() === 'PM' && hour < 12) hour += 12;
+  if (ampm && ampm.toUpperCase() === 'AM' && hour === 12) hour = 0;
+  
+  const end = new Date(Date.UTC(year, month, day, hour, minute));
+  const now = new Date();
+  
+  const diffMs = end - now;
+  if (diffMs <= 0) return 'Terminado';
+  
+  const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+  const diffHours = Math.floor((diffMs % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+  
+  if (diffDays > 1) {
+    return `Faltan ${diffDays} días`;
+  } else if (diffDays === 1) {
+    return `Falta 1 día`;
+  } else if (diffHours > 0) {
+    return `Faltan ${diffHours}h`;
+  } else {
+    const diffMinutes = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60));
+    return `Faltan ${diffMinutes}m`;
+  }
 }
