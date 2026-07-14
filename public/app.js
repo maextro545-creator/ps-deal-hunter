@@ -343,7 +343,8 @@ function openComparison(gameId) {
 
   // Build price table
   const prices = [...(deal.prices || [])].sort((a, b) => a.effectivePriceUSD - b.effectivePriceUSD);
-  const homePriceUSD = deal.homePrice?.effectivePriceUSD || 0;
+  const homePriceObj = deal.homePrice || deal.prices?.find(p => p.regionCode === 'PE');
+  const homePriceUSD = homePriceObj?.effectivePriceUSD || 0;
   const cheapestCode = deal.bestPrice?.regionCode;
   const worstCode = deal.worstPrice?.regionCode;
 
@@ -355,7 +356,7 @@ function openComparison(gameId) {
 
     // Row class
     if (p.regionCode === cheapestCode) row.className = 'row-best';
-    else if (p.isHome) row.className = 'row-home';
+    else if (p.regionCode === 'PE') row.className = 'row-home';
     else if (p.regionCode === worstCode) row.className = 'row-worst';
 
     // Savings vs Peru
@@ -364,11 +365,9 @@ function openComparison(gameId) {
       savingsPct = ((homePriceUSD - p.effectivePriceUSD) / homePriceUSD) * 100;
     }
 
-    const localPrice = formatPrice(
-      p.salePrice != null ? p.salePrice : p.originalPrice,
-      p.currency,
-      p.currencySymbol
-    );
+    const localPrice = p.isSale
+      ? `<span style="text-decoration: line-through; font-size: 0.75rem; color: var(--text-muted); margin-right: 6px;">${p.originalPriceStr}</span><span style="color: var(--accent-cyan); font-weight: 500;">${p.priceStr}</span>`
+      : p.priceStr;
 
     row.innerHTML = `
       <td style="font-family: var(--font-mono); color: var(--text-muted); font-size: 0.8rem;">#${i + 1}</td>
@@ -376,7 +375,7 @@ function openComparison(gameId) {
         <div class="region-cell">
           <span>${p.emoji || ''}</span>
           <span>${escapeHtml(p.regionName || p.regionCode)}</span>
-          ${p.isHome ? '<span class="badge-platform" style="font-size: 0.6rem; padding: 2px 6px;">TUYA</span>' : ''}
+          ${p.regionCode === 'PE' ? '<span class="badge-platform" style="font-size: 0.6rem; padding: 2px 6px;">TUYA</span>' : ''}
         </div>
       </td>
       <td style="color: var(--text-secondary);">${localPrice}</td>
@@ -472,7 +471,7 @@ function renderSavingsSummary(deal, prices) {
 
   const best = prices[0];
   const worst = prices[prices.length - 1];
-  const home = prices.find(p => p.isHome);
+  const home = prices.find(p => p.regionCode === 'PE');
   const savingsVsHome = deal.savingsVsHome || 0;
 
   summary.innerHTML = `
