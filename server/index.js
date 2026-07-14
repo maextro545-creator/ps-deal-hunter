@@ -249,22 +249,27 @@ app.get('/api/search', async (req, res) => {
     const cleanQuery = query.toLowerCase().trim().replace(/[^a-z0-9]+/g, '-');
     const cacheKey = `search-game:${cleanQuery}`;
 
-    // 3. Try to fetch from Redis KV cache
-    try {
-      const cachedResult = await cache.get(cacheKey);
-      if (cachedResult) {
-        console.log(`✅ Loaded search results from cache for: "${query}"`);
-        return res.json({
-          results: [cachedResult],
-          meta: {
-            query,
-            total: 1,
-            cached: true
-          }
-        });
+    // 3. Try to fetch from Redis KV cache (unless refresh=true is requested)
+    const bypassCache = req.query.refresh === 'true';
+    if (!bypassCache) {
+      try {
+        const cachedResult = await cache.get(cacheKey);
+        if (cachedResult) {
+          console.log(`✅ Loaded search results from cache for: "${query}"`);
+          return res.json({
+            results: [cachedResult],
+            meta: {
+              query,
+              total: 1,
+              cached: true
+            }
+          });
+        }
+      } catch (err) {
+        console.warn(`⚠️ Error reading search cache: ${err.message}`);
       }
-    } catch (err) {
-      console.warn(`⚠️ Error reading search cache: ${err.message}`);
+    } else {
+      console.log(`🔄 Cache bypass requested for search: "${query}"`);
     }
 
     // 4. Run live scraper search

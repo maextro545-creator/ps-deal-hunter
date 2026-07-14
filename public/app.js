@@ -5,6 +5,7 @@
 // ── State ────────────────────────────────────────────────────────
 let state = {
   deals: [],
+  searchResults: [], // IDs of games returned by remote searches
   regions: [],
   rates: {},
   status: {},
@@ -194,10 +195,13 @@ function filterDeals(deals) {
     // Search filter
     if (state.filters.search) {
       const q = state.filters.search.toLowerCase();
-      const matchName = deal.name.toLowerCase().includes(q);
-      const matchPublisher = (deal.publisher || '').toLowerCase().includes(q);
-      const matchGenre = (deal.genre || '').toLowerCase().includes(q);
-      if (!matchName && !matchPublisher && !matchGenre) return false;
+      const isSearchResult = state.searchResults.includes(deal.id);
+      if (!isSearchResult) {
+        const matchName = deal.name.toLowerCase().includes(q);
+        const matchPublisher = (deal.publisher || '').toLowerCase().includes(q);
+        const matchGenre = (deal.genre || '').toLowerCase().includes(q);
+        if (!matchName && !matchPublisher && !matchGenre) return false;
+      }
     }
 
     // On-sale filter
@@ -498,6 +502,7 @@ function renderSavingsSummary(deal, prices) {
 // ═══════════════════════════════════════════════════════════════
 async function handleSearch(searchTerm) {
   state.filters.search = searchTerm;
+  state.searchResults = []; // Clear previous search results
 
   if (!searchTerm) {
     renderDeals(state.deals);
@@ -518,6 +523,9 @@ async function handleSearch(searchTerm) {
     try {
       const res = await fetch(`/api/search?q=${encodeURIComponent(searchTerm)}`).then(r => r.json());
       const results = res.results || [];
+      
+      // Populate search results IDs so they pass the client-side filter
+      state.searchResults = results.map(r => r.id);
       
       // If we found live results, add them to our local state.deals list
       if (results.length > 0) {

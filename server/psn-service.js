@@ -285,8 +285,37 @@ function parsePriceString(priceStr, storeCurrency) {
  * Preference: FULL_GAME + not deluxe/ultimate/bundle → any FULL_GAME match.
  */
 function findBestProduct(products, searchTerm) {
-  const cleanSearch = searchTerm.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9\s]/g, '').trim();
-  const searchWords = cleanSearch.split(/\s+/);
+  const normalizeAndExpand = (str) => {
+    if (!str) return '';
+    let s = str.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+    
+    const acronyms = {
+      'gta': 'grand theft auto',
+      'gow': 'god of war',
+      'tlou': 'the last of us',
+      'cod': 'call of duty',
+      're': 'resident evil',
+      'fifa': 'fc'
+    };
+
+    for (const [acronym, expansion] of Object.entries(acronyms)) {
+      s = s.replace(new RegExp(`\\b${acronym}\\b`, 'g'), expansion);
+    }
+
+    s = s
+      .replace(/\b5\b/g, 'v')
+      .replace(/\b4\b/g, 'iv')
+      .replace(/\b3\b/g, 'iii')
+      .replace(/\b2\b/g, 'ii')
+      .replace(/\b1\b/g, 'i');
+
+    return s.replace(/[^a-z0-9\s]/g, '').replace(/\s+/g, ' ').trim();
+  };
+
+  const cleanSearch = normalizeAndExpand(searchTerm);
+  const searchWords = cleanSearch.split(/\s+/).filter(Boolean);
+
+  if (searchWords.length === 0) return null;
 
   // Classifications that represent the actual full game
   const GAME_CLASSIFICATIONS = new Set([
@@ -301,7 +330,7 @@ function findBestProduct(products, searchTerm) {
   const score = (p) => {
     if (!p.name) return 0;
 
-    const n = p.name.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9\s]/g, '').trim();
+    const n = normalizeAndExpand(p.name);
     const classification = (p.classification || '').toLowerCase().replace('_', ' ');
 
     // Reject non-game content outright
