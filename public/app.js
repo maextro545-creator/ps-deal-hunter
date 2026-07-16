@@ -371,6 +371,16 @@ function createDealCard(deal, index) {
   const fallbackGradient = deal.gradient || 'linear-gradient(135deg, #003087, #00439c)';
   const fallbackStyle = `background:${fallbackGradient}; display:flex; align-items:center; justify-content:center; font-size:3rem;`;
 
+  // Calculate if the sale is new (within the last 48 hours)
+  const createdAtMs = deal.createdAt ? new Date(deal.createdAt).getTime() : 0;
+  const saleDetectedAtMs = deal.saleDetectedAt ? new Date(deal.saleDetectedAt).getTime() : 0;
+  const nowMs = Date.now();
+  const timeLimit = 48 * 60 * 60 * 1000;
+  const isNewSale = deal.onSale && (
+    (saleDetectedAtMs > 0 && (nowMs - saleDetectedAtMs < timeLimit)) ||
+    (createdAtMs > 0 && (nowMs - createdAtMs < timeLimit))
+  );
+
   // Build card HTML
   article.innerHTML = `
     <div class="card-header" id="header-${escapeHtml(deal.id)}" style="background: ${fallbackGradient}; position:relative; overflow:hidden;">
@@ -385,6 +395,7 @@ function createDealCard(deal, index) {
       />
       <div style="position:absolute;inset:0;background:linear-gradient(180deg, rgba(0,0,0,0.1) 0%, rgba(0,0,0,0.85) 100%);"></div>
       <div class="card-badges" style="position:relative;z-index:1;">
+        ${isNewSale ? `<span class="badge-new-deal">🔥 Nuevo</span>` : ''}
         <span class="badge-platform">${escapeHtml(deal.platform || 'PS5')}</span>
         ${deal.onSale ? `<span class="badge-sale">-${deal.discountPercent}%</span>` : ''}
         ${deal.endsAt ? `<span class="badge-ends-at" title="Termina el ${escapeHtml(deal.endsAt)}">⏱️ ${escapeHtml(formatEndsAt(deal.endsAt))}</span>` : ''}

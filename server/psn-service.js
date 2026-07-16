@@ -17,6 +17,7 @@
 
 const { REGIONS } = require('./regions');
 const { generateDemoDeals } = require('./demo-data');
+const cache = require('./cache-service');
 
 // ─── Game Catalog ────────────────────────────────────────────────────────────────
 // Each entry has the display name, search term(s), and visual metadata.
@@ -701,6 +702,22 @@ async function fetchLiveDeals(exchangeRates, previousDeals = []) {
   }
 
   console.log(`  ✅ Scraped/recovered ${results.length}/${GAME_CATALOG.length} games`);
+
+  results.forEach(deal => {
+    const existing = previousDeals.find(d => d.id === deal.id);
+    if (existing) {
+      deal.createdAt = existing.createdAt || Date.now();
+      if (deal.onSale && !existing.onSale) {
+        deal.saleDetectedAt = Date.now();
+      } else {
+        deal.saleDetectedAt = existing.saleDetectedAt || null;
+      }
+    } else {
+      deal.createdAt = Date.now();
+      deal.saleDetectedAt = deal.onSale ? Date.now() : null;
+    }
+  });
+
   return results;
 }
 
@@ -1246,6 +1263,33 @@ async function scrapeCategoryDealsList(categoryId, page, exchangeRates) {
     }
   });
   await Promise.all(datePromises);
+
+  // Load previously cached deals to preserve timestamps for new indicator
+  const cacheKey = `category-deals:${categoryId}:${page}`;
+  let previousCategoryDeals = [];
+  try {
+    const cachedData = await cache.get(cacheKey);
+    if (cachedData && Array.isArray(cachedData)) {
+      previousCategoryDeals = cachedData;
+    }
+  } catch (err) {
+    // Ignore cache load errors
+  }
+
+  deals.forEach(deal => {
+    const existing = previousCategoryDeals.find(d => d.id === deal.id);
+    if (existing) {
+      deal.createdAt = existing.createdAt || Date.now();
+      if (deal.onSale && !existing.onSale) {
+        deal.saleDetectedAt = Date.now();
+      } else {
+        deal.saleDetectedAt = existing.saleDetectedAt || null;
+      }
+    } else {
+      deal.createdAt = Date.now();
+      deal.saleDetectedAt = deal.onSale ? Date.now() : null;
+    }
+  });
 
   return deals.sort((a, b) => (b.discountPercent || 0) - (a.discountPercent || 0));
 }

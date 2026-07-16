@@ -336,10 +336,19 @@ app.get('/api/search', async (req, res) => {
       }
     }
 
-    // 5. Merge results (avoiding duplicates)
+    // 5. Merge results (avoiding duplicates) and associate timestamps
     const results = [...localResults];
     if (liveResults && liveResults.length > 0) {
       liveResults.forEach(liveDeal => {
+        const existing = cachedDeals.find(d => d.id === liveDeal.id);
+        if (existing) {
+          liveDeal.createdAt = existing.createdAt || Date.now();
+          liveDeal.saleDetectedAt = existing.saleDetectedAt || null;
+        } else {
+          liveDeal.createdAt = Date.now();
+          liveDeal.saleDetectedAt = liveDeal.onSale ? Date.now() : null;
+        }
+
         if (!results.some(r => r.id === liveDeal.id)) {
           results.push(liveDeal);
         }

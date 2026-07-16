@@ -422,6 +422,9 @@ function generateDemoDeals(exchangeRates) {
       ) / 10;
     }
 
+    const createdAt = Date.now() - (i % 3 === 0 ? 4 * 60 * 60 * 1000 : 5 * 24 * 60 * 60 * 1000);
+    const saleDetectedAt = game.onSale ? (i % 2 === 0 ? Date.now() - 4 * 60 * 60 * 1000 : Date.now() - 5 * 24 * 60 * 60 * 1000) : null;
+
     deals.push({
       id: game.id,
       name: game.name,
@@ -439,6 +442,8 @@ function generateDemoDeals(exchangeRates) {
       worstPrice,
       homePrice,
       savingsVsHome,
+      createdAt,
+      saleDetectedAt,
     });
   }
 
